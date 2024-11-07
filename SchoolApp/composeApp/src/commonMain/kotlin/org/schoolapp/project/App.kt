@@ -97,3 +97,11 @@ fun CollaborationView(onNavigateBack: () -> Unit) {
     )
 }
 
+//@Composable
+//fun CalendarView
+
+//@Composable
+//fun GradesView
+
+//@Composable
+//fun CoursesView
