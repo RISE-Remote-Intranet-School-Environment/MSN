@@ -55,6 +55,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
     }
 }
 
+@Composable
 fun CalendarView(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Monthly", "Weekly", "Daily")
@@ -95,6 +96,8 @@ fun CalendarView(onNavigateBack: () -> Unit) {
         }
     )
 }
+
+
 
 @Composable
 fun CollaborationView(onNavigateBack: () -> Unit) {
