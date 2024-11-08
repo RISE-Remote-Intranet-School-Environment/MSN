@@ -24,6 +24,7 @@ fun App() {
                     "Home" -> HomeScreen(onNavigate = { screen -> currentScreen = screen })
                     "Collaboration" -> CollaborationView(onNavigateBack = { currentScreen = "Home" })
                     "Calendar" -> CalendarView(onNavigateBack = { currentScreen = "Home" })
+                    "Grades" -> GradesView(onNavigateBack = { currentScreen = "Home" })
                 }
             }
         )
@@ -135,6 +136,48 @@ fun CollaborationView(onNavigateBack: () -> Unit) {
                 1 -> SalesTab()
                 2 -> DocsTab()
                 3 -> PrivateLessonsTab()
+            }
+        }
+    )
+}
+
+@Composable
+fun GradesView(onNavigateBack: () -> Unit) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Recent Grades", "Simulation", "Report Card")
+
+    Scaffold(
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = { Text("Grades") },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back to Home"
+                            )
+                        }
+                    }
+                )
+
+                // TabRow at the top of the screen
+                TabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(title) }
+                        )
+                    }
+                }
+            }
+        },
+        content = {
+            when (selectedTab) {
+                0 -> RecentgradesTab()
+                1 -> SimulationgradesTab()
+                2 -> ReportTab()
             }
         }
     )
