@@ -1,6 +1,7 @@
 package org.schoolapp.project
 
 import DocsTab
+import ReportTab
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
