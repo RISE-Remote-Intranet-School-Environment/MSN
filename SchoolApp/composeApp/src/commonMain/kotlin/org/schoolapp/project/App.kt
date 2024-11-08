@@ -23,6 +23,7 @@ fun App() {
                 when (currentScreen) {
                     "Home" -> HomeScreen(onNavigate = { screen -> currentScreen = screen })
                     "Collaboration" -> CollaborationView(onNavigateBack = { currentScreen = "Home" })
+                    "Calendar" -> CalendarView(onNavigateBack = { currentScreen = "Home" })
                 }
             }
         )
@@ -52,6 +53,47 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             Text("Grades")
         }
     }
+}
+
+fun CalendarView(onNavigateBack: () -> Unit) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Monthly", "Weekly", "Daily")
+
+    Scaffold(
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = { Text("Calendar") },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back to Home"
+                            )
+                        }
+                    }
+                )
+
+                // TabRow at the top of the screen
+                TabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(title) }
+                        )
+                    }
+                }
+            }
+        },
+        content = {
+            when (selectedTab) {
+                0 -> MonthlyTab()
+                1 -> WeeklyTab()
+                2 -> DailyTab()
+            }
+        }
+    )
 }
 
 @Composable
