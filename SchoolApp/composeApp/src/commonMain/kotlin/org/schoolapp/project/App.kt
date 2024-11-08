@@ -97,8 +97,6 @@ fun CalendarView(onNavigateBack: () -> Unit) {
     )
 }
 
-
-
 @Composable
 fun CollaborationView(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -141,12 +139,3 @@ fun CollaborationView(onNavigateBack: () -> Unit) {
         }
     )
 }
-
-//@Composable
-//fun CalendarView
-
-//@Composable
-//fun GradesView
-
-//@Composable
-//fun CoursesView

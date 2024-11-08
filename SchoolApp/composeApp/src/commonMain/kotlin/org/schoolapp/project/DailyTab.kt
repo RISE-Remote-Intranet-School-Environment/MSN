@@ -1,8 +1,9 @@
 package org.schoolapp.project
 
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 
 @Composable
 fun DailyTab() {
-    TODO("Not yet implemented")
+    Text("Daily Tab Content")
 }
