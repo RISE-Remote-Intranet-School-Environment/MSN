@@ -263,14 +263,16 @@ fun ClassesView(onNavigateBack: () -> Unit, onNavigateToProfessors: () -> Unit) 
     )
 }
 
+data class Professor(val name: String, val courseCount: Int, val image: Int, val rating: Int)
+
 @Composable
 fun ProfessorsScreen(onNavigateBack: () -> Unit) {
     val professors = listOf(
-        Professor("Mme Dupont", 3, R.drawable.okok),
-        Professor("M. Martin", 5, R.drawable.okok),
-        Professor("Mme Durand", 4, R.drawable.okok),
-        Professor("M. Lefevre", 2, R.drawable.okok),
-        Professor("Mme Moreau", 6, R.drawable.okok)
+        Professor("Mme Dupont", 3, R.drawable.okok, 4),
+        Professor("M. Martin", 5, R.drawable.okok, 5),
+        Professor("Mme Durand", 4, R.drawable.okok, 3),
+        Professor("M. Lefevre", 2, R.drawable.okok, 4),
+        Professor("Mme Moreau", 6, R.drawable.okok, 5)
     )
 
     Scaffold(
@@ -345,6 +347,7 @@ fun ProfessorItem(professor: Professor) {
                 text = "Courses: ${professor.courseCount}",
                 style = MaterialTheme.typography.body2
             )
+            RatingBar(rating = professor.rating)
         }
 
         IconButton(onClick = { }) {
@@ -355,8 +358,6 @@ fun ProfessorItem(professor: Professor) {
         }
     }
 }
-
-data class Professor(val name: String, val courseCount: Int, val image: Int)
 
 @Composable
 fun ClassItem(courseName: String, teacherName: String) {
@@ -383,6 +384,24 @@ fun ClassItem(courseName: String, teacherName: String) {
         }
         IconButton(onClick = { /* Show course details */ }) {
             Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Course details")
+        }
+    }
+}
+
+@Composable
+fun RatingBar(rating: Int) {
+    Row(
+        modifier = Modifier.padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(5) { index ->
+            val icon = if (index < rating) Icons.Default.Star else Icons.Default.StarBorder
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.Yellow,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
