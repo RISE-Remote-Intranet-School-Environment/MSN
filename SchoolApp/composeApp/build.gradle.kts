@@ -58,6 +58,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -105,6 +106,7 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    implementation("androidx.compose.material:material-icons-extended:1.4.0")
 }
 
 compose.desktop {

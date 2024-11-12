@@ -10,6 +10,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.material.TextField
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+
+
+
 
 @Composable
 fun App() {
@@ -26,6 +39,7 @@ fun App() {
                     "Collaboration" -> CollaborationView(onNavigateBack = { currentScreen = "Home" })
                     "Calendar" -> CalendarView(onNavigateBack = { currentScreen = "Home" })
                     "Grades" -> GradesView(onNavigateBack = { currentScreen = "Home" })
+                    "Classes" -> ClassesView(onNavigateBack = { currentScreen = "Home" })
                 }
             }
         )
@@ -182,4 +196,138 @@ fun GradesView(onNavigateBack: () -> Unit) {
             }
         }
     )
+}
+
+@Composable
+fun ClassesView(onNavigateBack: () -> Unit) {
+    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var filteredCourses by remember { mutableStateOf(listOf("Data Science", "History", "Science")) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Classes") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back to Home"
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                Text(
+                    text = "Available courses :",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Barre de recherche pour filtrer les cours
+                TextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        // Filtrage des cours selon la recherche
+                        filteredCourses = listOf("Data Science", "History", "Science").filter {
+                            it.contains(searchQuery.text, ignoreCase = true)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                        .border(1.dp, MaterialTheme.colors.primary)
+                        .padding(8.dp),
+                    label = { Text("Search courses") }
+                )
+
+                // Liste des cours filtrés
+                filteredCourses.forEach { course ->
+                    ClassItem(courseName = course, teacherName = "Teacher Name")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Bouton pour voir le programme
+                Button(
+                    onClick = { /* Action du bouton */ },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("See the program")
+                }
+
+                Spacer(modifier = Modifier.height(32.dp)) // Espace entre les cours et la liste des professeurs
+
+                // Section des professeurs
+                Text(
+                    text = "Professors :",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Liste des professeurs
+                ProfessorItem(professorName = "Mme Dupont")
+                ProfessorItem(professorName = "M. Martin")
+                ProfessorItem(professorName = "Mme Durand")
+            }
+        }
+    )
+}
+
+@Composable
+fun ClassItem(courseName: String, teacherName: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .height(80.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(text = courseName, style = MaterialTheme.typography.subtitle1)
+            Text(text = teacherName, style = MaterialTheme.typography.body2)
+        }
+        IconButton(onClick = { /* Show course details */ }) {
+            Icon(imageVector = Icons.Filled.ArrowForward, contentDescription = "Course details")
+        }
+    }
+}
+
+@Composable
+fun RatingBar(rating: Int) {
+    Row {
+        repeat(5) { index ->
+            Text(
+                text = if (index < rating) "★" else "☆", // Utilisation de caractères Unicode pour les étoiles pleines et vides
+                style = MaterialTheme.typography.h6,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfessorItem(professorName: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .height(50.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = professorName,
+            style = MaterialTheme.typography.subtitle1
+        )
+    }
 }
