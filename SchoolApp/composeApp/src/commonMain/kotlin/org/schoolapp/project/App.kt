@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.material.TextField
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Color
@@ -20,9 +19,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-
-
-
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun App() {
@@ -39,12 +39,14 @@ fun App() {
                     "Collaboration" -> CollaborationView(onNavigateBack = { currentScreen = "Home" })
                     "Calendar" -> CalendarView(onNavigateBack = { currentScreen = "Home" })
                     "Grades" -> GradesView(onNavigateBack = { currentScreen = "Home" })
-                    "Classes" -> ClassesView(onNavigateBack = { currentScreen = "Home" })
+                    "Classes" -> ClassesView(onNavigateBack = { currentScreen = "Home" }, onNavigateToProfessors = { currentScreen = "Professors" })
+                    "Professors" -> ProfessorsScreen(onNavigateBack = { currentScreen = "Classes" })
                 }
             }
         )
     }
 }
+
 
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
@@ -91,7 +93,6 @@ fun CalendarView(onNavigateBack: () -> Unit) {
                     }
                 )
 
-                // TabRow at the top of the screen
                 TabRow(selectedTabIndex = selectedTab) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -133,7 +134,6 @@ fun CollaborationView(onNavigateBack: () -> Unit) {
                     }
                 )
 
-                // TabRow at the top of the screen
                 TabRow(selectedTabIndex = selectedTab) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -176,7 +176,6 @@ fun GradesView(onNavigateBack: () -> Unit) {
                     }
                 )
 
-                // TabRow at the top of the screen
                 TabRow(selectedTabIndex = selectedTab) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -199,17 +198,9 @@ fun GradesView(onNavigateBack: () -> Unit) {
 }
 
 @Composable
-fun ClassesView(onNavigateBack: () -> Unit) {
+fun ClassesView(onNavigateBack: () -> Unit, onNavigateToProfessors: () -> Unit) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var filteredCourses by remember { mutableStateOf(listOf("Data Science", "History", "Science")) }
-
-    val professorsCourses = remember {
-        mapOf(
-            "Mme Dupont" to listOf("Data Science", "History"),
-            "M. Martin" to listOf("Mathematics", "Physics"),
-            "Mme Durand" to listOf("Biology", "Chemistry")
-        )
-    }
 
     Scaffold(
         topBar = {
@@ -234,7 +225,7 @@ fun ClassesView(onNavigateBack: () -> Unit) {
                 verticalArrangement = Arrangement.Top
             ) {
                 Text(
-                    text = "Available courses :",
+                    text = "Available courses:",
                     style = MaterialTheme.typography.h6,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -262,22 +253,10 @@ fun ClassesView(onNavigateBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { /* Action du bouton */ },
+                    onClick = onNavigateToProfessors,
                     modifier = Modifier.padding(top = 16.dp)
                 ) {
-                    Text("See the program")
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Text(
-                    text = "Professors :",
-                    style = MaterialTheme.typography.h6,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                professorsCourses.forEach { (professorName, courses) ->
-                    ProfessorItem(professorName = professorName, numberOfCourses = courses.size)
+                    Text("See the professors")
                 }
             }
         }
@@ -285,27 +264,99 @@ fun ClassesView(onNavigateBack: () -> Unit) {
 }
 
 @Composable
-fun ProfessorItem(professorName: String, numberOfCourses: Int) {
+fun ProfessorsScreen(onNavigateBack: () -> Unit) {
+    val professors = listOf(
+        Professor("Mme Dupont", 3, R.drawable.okok),
+        Professor("M. Martin", 5, R.drawable.okok),
+        Professor("Mme Durand", 4, R.drawable.okok),
+        Professor("M. Lefevre", 2, R.drawable.okok),
+        Professor("Mme Moreau", 6, R.drawable.okok)
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Professors") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back to Classes"
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Professors List:",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                ProfessorList(professors = professors)
+            }
+        }
+    )
+}
+
+@Composable
+fun ProfessorList(professors: List<Professor>) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(professors) { professor ->
+            ProfessorItem(professor = professor)
+        }
+    }
+}
+
+@Composable
+fun ProfessorItem(professor: Professor) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .height(50.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .height(80.dp),
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Image(
+            painter = painterResource(id = professor.image),
+            contentDescription = professor.name,
+            modifier = Modifier
+                .size(60.dp)
+                .padding(end = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Text(
-                text = professorName,
+                text = professor.name,
                 style = MaterialTheme.typography.subtitle1
             )
             Text(
-                text = "Courses: $numberOfCourses",
+                text = "Courses: ${professor.courseCount}",
                 style = MaterialTheme.typography.body2
+            )
+        }
+
+        IconButton(onClick = { }) {
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = "More details"
             )
         }
     }
 }
+
+data class Professor(val name: String, val courseCount: Int, val image: Int)
 
 @Composable
 fun ClassItem(courseName: String, teacherName: String) {
@@ -313,47 +364,25 @@ fun ClassItem(courseName: String, teacherName: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .height(80.dp),
+            .height(100.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(text = courseName, style = MaterialTheme.typography.subtitle1)
-            Text(text = teacherName, style = MaterialTheme.typography.body2)
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ok),
+                contentDescription = "Course Image",
+                modifier = Modifier.size(60.dp).padding(end = 16.dp)
+            )
+            Column {
+                Text(text = courseName, style = MaterialTheme.typography.subtitle1)
+                Text(text = teacherName, style = MaterialTheme.typography.body2)
+            }
         }
         IconButton(onClick = { /* Show course details */ }) {
             Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Course details")
         }
     }
 }
-
-@Composable
-fun AddCourseButton() {
-    Button(
-        onClick = { /* Handle add course action */ },
-        modifier = Modifier.padding(top = 16.dp)
-    ) {
-        Text("Add a new course")
-    }
-}
-
-@Composable
-fun SortCoursesButton() {
-    Button(
-        onClick = { /* Handle sort action */ },
-        modifier = Modifier.padding(top = 16.dp)
-    ) {
-        Text("Sort courses")
-    }
-}
-
-@Composable
-fun SeeCourseDetailsButton() {
-    Button(
-        onClick = { /* Navigate to course details page */ },
-        modifier = Modifier.padding(top = 16.dp)
-    ) {
-        Text("See course details")
-    }
-}
-
