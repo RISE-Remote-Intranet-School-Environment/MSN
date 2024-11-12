@@ -203,6 +203,14 @@ fun ClassesView(onNavigateBack: () -> Unit) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var filteredCourses by remember { mutableStateOf(listOf("Data Science", "History", "Science")) }
 
+    val professorsCourses = remember {
+        mapOf(
+            "Mme Dupont" to listOf("Data Science", "History"),
+            "M. Martin" to listOf("Mathematics", "Physics"),
+            "Mme Durand" to listOf("Biology", "Chemistry")
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -231,12 +239,10 @@ fun ClassesView(onNavigateBack: () -> Unit) {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Barre de recherche pour filtrer les cours
                 TextField(
                     value = searchQuery,
                     onValueChange = {
                         searchQuery = it
-                        // Filtrage des cours selon la recherche
                         filteredCourses = listOf("Data Science", "History", "Science").filter {
                             it.contains(searchQuery.text, ignoreCase = true)
                         }
@@ -249,14 +255,12 @@ fun ClassesView(onNavigateBack: () -> Unit) {
                     label = { Text("Search courses") }
                 )
 
-                // Liste des cours filtrés
                 filteredCourses.forEach { course ->
                     ClassItem(courseName = course, teacherName = "Teacher Name")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Bouton pour voir le programme
                 Button(
                     onClick = { /* Action du bouton */ },
                     modifier = Modifier.padding(top = 16.dp)
@@ -264,22 +268,43 @@ fun ClassesView(onNavigateBack: () -> Unit) {
                     Text("See the program")
                 }
 
-                Spacer(modifier = Modifier.height(32.dp)) // Espace entre les cours et la liste des professeurs
+                Spacer(modifier = Modifier.height(32.dp))
 
-                // Section des professeurs
                 Text(
                     text = "Professors :",
                     style = MaterialTheme.typography.h6,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Liste des professeurs
-                ProfessorItem(professorName = "Mme Dupont")
-                ProfessorItem(professorName = "M. Martin")
-                ProfessorItem(professorName = "Mme Durand")
+                professorsCourses.forEach { (professorName, courses) ->
+                    ProfessorItem(professorName = professorName, numberOfCourses = courses.size)
+                }
             }
         }
     )
+}
+
+@Composable
+fun ProfessorItem(professorName: String, numberOfCourses: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .height(50.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = professorName,
+                style = MaterialTheme.typography.subtitle1
+            )
+            Text(
+                text = "Courses: $numberOfCourses",
+                style = MaterialTheme.typography.body2
+            )
+        }
+    }
 }
 
 @Composable
@@ -297,37 +322,38 @@ fun ClassItem(courseName: String, teacherName: String) {
             Text(text = teacherName, style = MaterialTheme.typography.body2)
         }
         IconButton(onClick = { /* Show course details */ }) {
-            Icon(imageVector = Icons.Filled.ArrowForward, contentDescription = "Course details")
+            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Course details")
         }
     }
 }
 
 @Composable
-fun RatingBar(rating: Int) {
-    Row {
-        repeat(5) { index ->
-            Text(
-                text = if (index < rating) "★" else "☆", // Utilisation de caractères Unicode pour les étoiles pleines et vides
-                style = MaterialTheme.typography.h6,
-                modifier = Modifier.padding(end = 4.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun ProfessorItem(professorName: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .height(50.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+fun AddCourseButton() {
+    Button(
+        onClick = { /* Handle add course action */ },
+        modifier = Modifier.padding(top = 16.dp)
     ) {
-        Text(
-            text = professorName,
-            style = MaterialTheme.typography.subtitle1
-        )
+        Text("Add a new course")
     }
 }
+
+@Composable
+fun SortCoursesButton() {
+    Button(
+        onClick = { /* Handle sort action */ },
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
+        Text("Sort courses")
+    }
+}
+
+@Composable
+fun SeeCourseDetailsButton() {
+    Button(
+        onClick = { /* Navigate to course details page */ },
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
+        Text("See course details")
+    }
+}
+
