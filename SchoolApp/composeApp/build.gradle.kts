@@ -107,6 +107,7 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
     implementation("androidx.compose.material:material-icons-extended:1.4.0")
+
 }
 
 compose.desktop {
