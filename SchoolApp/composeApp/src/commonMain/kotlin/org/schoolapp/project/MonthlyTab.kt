@@ -25,13 +25,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 
-
 @Composable
 fun MonthlyTab() {
     var newTask by remember { mutableStateOf("") }
     val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
 
     var showEventDialog by remember { mutableStateOf(false) } // Gérer l'affichage de la pop-up
+    var showToDoListDialog by remember { mutableStateOf(false) } // Pop-up pour les tâches
     var currentMonth by remember { mutableStateOf(YearMonth.now()) } // Mois courant
     val currentDay = LocalDate.now().dayOfMonth // Jour actuel
 
@@ -48,7 +48,7 @@ fun MonthlyTab() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(350.dp)  // Augmenter la taille du calendrier ici
                 .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
         ) {
             Column {
@@ -83,7 +83,7 @@ fun MonthlyTab() {
                 IconButton(
                     onClick = { showEventDialog = true },
                     modifier = Modifier
-                        .align(Alignment.TopEnd) // Align the button to the top-right
+                        .align(Alignment.BottomCenter) // Align the button to the top-right
                         .padding(16.dp)
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add Event", tint = Color.White)
@@ -107,61 +107,20 @@ fun MonthlyTab() {
         Spacer(modifier = Modifier.height(16.dp))
 
 
-        // Liste de tâches
-        Box(
+        // Liste des tâches transformée en bouton
+        Button(
+            onClick = { showToDoListDialog = true },
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .background(Color(0xFFD3D3D3), RoundedCornerShape(12.dp))
-                .padding(16.dp)
+                .align(Alignment.CenterHorizontally)
+                .padding(vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(Color(0xFFD3D3D3))
         ) {
-            Column {
-                Text(
-                    text = "To Do LIST",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(tasks) { task ->
-                        ToDoItem(task = task)
-                    }
-                }
-            }
+            Text(text = "To Do List")
         }
 
-        // Champ pour ajouter une nouvelle tâche et le bouton
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            TextField(
-                value = newTask,
-                onValueChange = { newTask = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp),
-                placeholder = { Text("New task") },
-                singleLine = true,
-                colors = TextFieldDefaults.textFieldColors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
-            Button(
-                onClick = {
-                    if (newTask.isNotBlank()) {
-                        tasks.add(newTask)
-                        newTask = ""
-                    }
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text("Add")
-            }
+        // Pop-up pour afficher les tâches et ajouter une nouvelle tâche
+        if (showToDoListDialog) {
+            ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
         }
     }
 
@@ -262,6 +221,64 @@ fun EventDialog(onDismiss: () -> Unit) {
     )
 }
 
+@Composable
+fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
+    var newTask by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("To Do List") },
+        text = {
+            Column {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(tasks) { task ->
+                        ToDoItem(task = task)
+                    }
+                }
+
+                // Champ pour ajouter une nouvelle tâche
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    TextField(
+                        value = newTask,
+                        onValueChange = { newTask = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        placeholder = { Text("New task") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.textFieldColors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                    Button(
+                        onClick = {
+                            if (newTask.isNotBlank()) {
+                                tasks.add(newTask)
+                                newTask = ""
+                            }
+                        },
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text("Add")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss
+            ) {
+                Text("Close")
+            }
+        }
+    )
+}
 
 @Composable
 fun ToDoItem(task: String) {
