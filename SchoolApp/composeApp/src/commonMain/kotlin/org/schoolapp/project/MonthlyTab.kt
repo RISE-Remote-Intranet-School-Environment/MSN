@@ -25,15 +25,24 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.School
+
+
+
 @Composable
 fun MonthlyTab() {
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
     var newTask by remember { mutableStateOf("") }
     val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
 
-    var showEventDialog by remember { mutableStateOf(false) } // Gérer l'affichage de la pop-up
-    var showToDoListDialog by remember { mutableStateOf(false) } // Pop-up pour les tâches
-    var currentMonth by remember { mutableStateOf(YearMonth.now()) } // Mois courant
-    val currentDay = LocalDate.now().dayOfMonth // Jour actuel
+    var showEventDialog by remember { mutableStateOf(false) }
+    var showToDoListDialog by remember { mutableStateOf(false) }
+    var showOptions by remember { mutableStateOf(false) }
+
 
     Column(
         modifier = Modifier
@@ -48,8 +57,9 @@ fun MonthlyTab() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(350.dp)  // Augmenter la taille du calendrier ici
+                .height(550.dp)  // Augmenter la taille du calendrier ici
                 .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
+
         ) {
             Column {
                 Row(
@@ -74,59 +84,69 @@ fun MonthlyTab() {
                 // Affichage de la grille du calendrier
                 CalendarGrid(currentMonth = currentMonth, currentDay = currentDay)
             }
-
-            // Bouton + pour ajouter un événement
+            // Bouton flottant avec effet pour afficher les options
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
             ) {
-                IconButton(
-                    onClick = { showEventDialog = true },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter) // Align the button to the top-right
-                        .padding(16.dp)
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Event", tint = Color.White)
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedVisibility(
+                        visible = showOptions,
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { it / 2 }),
+                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(targetOffsetY = { it / 2 })
+                    ) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            // Bouton To Do List
+                            FloatingActionButton(
+                                onClick = { showToDoListDialog = true },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(Icons.Filled.List, contentDescription = "To Do List", tint = Color.Black)
+                            }
+
+                            // Bouton Cours
+                            FloatingActionButton(
+                                onClick = { /* Action pour les cours */ },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(Icons.Filled.School, contentDescription = "Courses", tint = Color.Black)
+                            }
+
+                            // Nouveau bouton pour Ajouter un événement
+                            FloatingActionButton(
+                                onClick = { showEventDialog = true },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(Icons.Filled.Add, contentDescription = "Add Event", tint = Color.Black)
+                            }
+                        }
+                    }
+
+                    // Bouton flottant principal qui déclenche l'animation
+                    FloatingActionButton(
+                        onClick = { showOptions = !showOptions },
+                        backgroundColor = Color(0xFF5F9EA0)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Options", tint = Color.White)
+                    }
                 }
             }
+
+            // Dialogues pour To Do List et ajout d'événements
+            if (showEventDialog) {
+                EventDialog(onDismiss = { showEventDialog = false })
+            }
+            if (showToDoListDialog) {
+                ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
+            }
+
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Bouton Courses
-        Button(
-            onClick = { /* Action pour les cours */ },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFFD3D3D3))
-        ) {
-            Text(text = "Courses")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        // Liste des tâches transformée en bouton
-        Button(
-            onClick = { showToDoListDialog = true },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFFD3D3D3))
-        ) {
-            Text(text = "To Do List")
-        }
-
-        // Pop-up pour afficher les tâches et ajouter une nouvelle tâche
-        if (showToDoListDialog) {
-            ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
-        }
-    }
-
-    // Pop-up pour ajouter un événement personnel
-    if (showEventDialog) {
-        EventDialog(onDismiss = { showEventDialog = false })
     }
 }
 
@@ -136,6 +156,20 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
     val lastDayOfMonth = currentMonth.lengthOfMonth()
 
     val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+    // Calcul de la hauteur disponible pour la grille des jours
+    val availableHeight = 400.dp // Hauteur totale de 500.dp pour la grille
+    val headerHeight = 48.dp // Espace réservé pour l'en-tête avec les jours de la semaine (Mon, Tue, etc.)
+    val gridHeight = availableHeight - headerHeight // Hauteur restante pour les jours
+
+    // Nombre total de jours dans le mois
+    val totalDays = lastDayOfMonth
+
+    // Calcul du nombre de lignes nécessaires
+    val rows = (totalDays + firstDayOfMonth.dayOfWeek.value - 1) / 7 + 1
+
+    // Calcul de la taille de chaque cellule de jour en fonction de la hauteur disponible
+    val dayCellHeight = gridHeight / rows
 
     Column {
         // Affichage des jours de la semaine
@@ -151,24 +185,25 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
         }
 
         var day = 1 - firstDayOfMonth.dayOfWeek.value
-        for (week in 1..6) {
+        for (week in 1..rows) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 for (i in 1..7) {
-                    val dayText = if (day > 0 && day <= lastDayOfMonth) day.toString() else ""
+                    val dayText = if (day > 0 && day <= totalDays) day.toString() else ""
                     val isToday = day == currentDay
                     val textColor = if (isToday) Color.White else Color.Gray
                     val backgroundColor = if (isToday) Color.Red else Color.Transparent
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
-                            .size(30.dp)
+                            .height(dayCellHeight) // Utilisation de la hauteur calculée pour chaque cellule
+                            .weight(1f) // Utilisation de `weight` pour une taille proportionnelle
                             .background(backgroundColor, RoundedCornerShape(15.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = dayText,
                             color = textColor,
-                            fontSize = 14.sp
+                            fontSize = 14.sp // Tu peux ajuster la taille de la police ici si nécessaire
                         )
                     }
                     day++
@@ -177,6 +212,7 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
         }
     }
 }
+
 
 @Composable
 fun EventDialog(onDismiss: () -> Unit) {
