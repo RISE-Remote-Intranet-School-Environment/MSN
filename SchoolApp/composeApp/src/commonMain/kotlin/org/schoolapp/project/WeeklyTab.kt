@@ -30,25 +30,23 @@ fun WeeklyTab() {
     var newTask by remember { mutableStateOf("") }
     val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
 
-    var showW_EventDialog by remember { mutableStateOf(false) } // Gérer l'affichage de la pop-up
-    var showW_TodoListDialog by remember { mutableStateOf(false) } // Pop-up pour les tâches
-    var currentMonth by remember { mutableStateOf(YearMonth.now()) } // Mois courant
-    val currentDay = LocalDate.now().dayOfMonth // Jour actuel
+    var showW_EventDialog by remember { mutableStateOf(false) }
+    var showW_TodoListDialog by remember { mutableStateOf(false) }
+    var startOfWeek by remember { mutableStateOf(LocalDate.now().with(java.time.DayOfWeek.MONDAY)) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF5F9EA0))
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Calendrier avec les boutons <, > et +
+        // Affichage des boutons de navigation par semaine
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(350.dp)  // Augmenter la taille du calendrier ici
+                .height(500.dp)  // Taille fixe pour le calendrier avec scroll
                 .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
         ) {
             Column {
@@ -56,23 +54,30 @@ fun WeeklyTab() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Previous Month", tint = Color.White)
+                    IconButton(onClick = { startOfWeek = startOfWeek.minusWeeks(1) }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Previous Week", tint = Color.White)
                     }
                     Text(
-                        text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                        text = "Semaine du ${startOfWeek.format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy"))}",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(16.dp)
                     )
-                    IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-                        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Next Month", tint = Color.White)
+                    IconButton(onClick = { startOfWeek = startOfWeek.plusWeeks(1) }) {
+                        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Next Week", tint = Color.White)
                     }
                 }
 
-                // Affichage de la grille du calendrier
-                W_CalendarGrid(currentMonth = currentMonth, currentDay = currentDay)
+                // Grille hebdomadaire avec les heures défilable verticalement
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)  // Hauteur fixe
+                        .verticalScroll(rememberScrollState())  // Scroll vertical
+                ) {
+                    W_WeeklyGrid(startOfWeek)
+                }
             }
 
             // Bouton + pour ajouter un événement
@@ -83,7 +88,7 @@ fun WeeklyTab() {
                 IconButton(
                     onClick = { showW_EventDialog = true },
                     modifier = Modifier
-                        .align(Alignment.BottomCenter) // Align the button to the top-right
+                        .align(Alignment.BottomCenter)
                         .padding(16.dp)
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add Event", tint = Color.White)
@@ -93,21 +98,7 @@ fun WeeklyTab() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Bouton Courses
-        Button(
-            onClick = { /* Action pour les cours */ },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFFD3D3D3))
-        ) {
-            Text(text = "Courses")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        // Liste des tâches transformée en bouton
+        // Bouton To Do List
         Button(
             onClick = { showW_TodoListDialog = true },
             modifier = Modifier
@@ -118,65 +109,74 @@ fun WeeklyTab() {
             Text(text = "To Do List")
         }
 
-        // Pop-up pour afficher les tâches et ajouter une nouvelle tâche
         if (showW_TodoListDialog) {
             W_TodoListDialog(tasks = tasks, onDismiss = { showW_TodoListDialog = false })
         }
     }
 
-    // Pop-up pour ajouter un événement personnel
     if (showW_EventDialog) {
         W_EventDialog(onDismiss = { showW_EventDialog = false })
     }
 }
 
 @Composable
-fun W_CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
-    val firstDayOfMonth = currentMonth.atDay(1)
-    val lastDayOfMonth = currentMonth.lengthOfMonth()
-
+fun W_WeeklyGrid(startOfWeek: LocalDate) {
     val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val hours = (8..24).toList()
 
-    Column {
-        // Affichage des jours de la semaine
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            daysOfWeek.forEach {
+    Row(Modifier.fillMaxSize()) {
+        // Colonne des heures
+        Column(
+            modifier = Modifier
+                .width(50.dp)
+                .padding(top = 20.dp)
+        ) {
+            hours.forEach { hour ->
                 Text(
-                    text = it,
+                    text = "${hour.toString().padStart(2, '0')}:00",
                     color = Color.White,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(4.dp)
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(vertical = 4.dp) // Ajustement du padding vertical pour une grille plus fine
                 )
             }
         }
 
-        var day = 1 - firstDayOfMonth.dayOfWeek.value
-        for (week in 1..6) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                for (i in 1..7) {
-                    val dayText = if (day > 0 && day <= lastDayOfMonth) day.toString() else ""
-                    val isToday = day == currentDay
-                    val textColor = if (isToday) Color.White else Color.Gray
-                    val backgroundColor = if (isToday) Color.Red else Color.Transparent
+        // Colonnes des jours de la semaine sans décalage
+        daysOfWeek.forEachIndexed { index, day ->
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(2.dp) // Réduction de padding pour affiner la grille
+            ) {
+                val currentDate = startOfWeek.plusDays(index.toLong())
+                Text(
+                    text = "$day ${currentDate.dayOfMonth}",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(4.dp)
+                )
+
+                // Grille horaire pour chaque jour
+                hours.forEach {
                     Box(
                         modifier = Modifier
-                            .padding(4.dp)
-                            .size(30.dp)
-                            .background(backgroundColor, RoundedCornerShape(15.dp)),
+                            .fillMaxWidth()
+                            .height(30.dp) // Taille réduite de la cellule
+                            .background(Color(0xFF8A8A8A), RoundedCornerShape(2.dp)) // Coins légèrement arrondis pour un style plus léger
+                            .padding(2.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = dayText,
-                            color = textColor,
-                            fontSize = 14.sp
-                        )
+                        Text(text = "", color = Color.White)
                     }
-                    day++
                 }
             }
         }
     }
 }
+
+
+
 
 @Composable
 fun W_EventDialog(onDismiss: () -> Unit) {

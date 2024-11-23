@@ -10,19 +10,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.painter.Painter
+
+
 
 @Composable
 fun App() {
@@ -47,31 +53,90 @@ fun App() {
     }
 }
 
-
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { onNavigate("Calendar") }) {
-            Text("Calendar")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            HomeSection(
+                icon = painterResource(id = R.drawable.calendar), // Remplacez par vos images
+                label = "Calendar",
+                onClick = { onNavigate("Calendar") }
+            )
+            HomeSection(
+                icon = painterResource(id = R.drawable.klass), // Remplacez par vos images
+                label = "Classes",
+                onClick = { onNavigate("Classes") }
+            )
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { onNavigate("Classes") }) {
-            Text("Classes")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { onNavigate("Collaboration") }) {
-            Text("Collaboration")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { onNavigate("Grades") }) {
-            Text("Grades")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            HomeSection(
+                icon = painterResource(id = R.drawable.collaboration), // Remplacez par vos images
+                label = "Collaboration",
+                onClick = { onNavigate("Collaboration") }
+            )
+            HomeSection(
+                icon = painterResource(id = R.drawable.grades), // Remplacez par vos images
+                label = "Grades",
+                onClick = { onNavigate("Grades") }
+            )
         }
     }
 }
+
+@Composable
+fun HomeSection(icon: Painter, label: String, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .clickable { onClick() }
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = icon,
+            contentDescription = label,
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(label)
+    }
+}
+
+//@Composable
+//fun HomeScreen(onNavigate: (String) -> Unit) {
+//    Column(
+//        modifier = Modifier.fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.Center
+//    ) {
+//        Button(onClick = { onNavigate("Calendar") }) {
+//            Text("Calendar")
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Button(onClick = { onNavigate("Classes") }) {
+//            Text("Classes")
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Button(onClick = { onNavigate("Collaboration") }) {
+//            Text("Collaboration")
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Button(onClick = { onNavigate("Grades") }) {
+//            Text("Grades")
+//        }
+//    }
+//}
+
 
 @Composable
 fun CalendarView(onNavigateBack: () -> Unit) {
