@@ -34,136 +34,16 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.foundation.clickable
 
 
-
-
-//@Composable
-//fun MonthlyTab() {
-//    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
-//    var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
-//    var newTask by remember { mutableStateOf("") }
-//    val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
-//
-//    var showEventDialog by remember { mutableStateOf(false) }
-//    var showToDoListDialog by remember { mutableStateOf(false) }
-//    var showOptions by remember { mutableStateOf(false) }
-//
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(Color(0xFF5F9EA0))
-//            .padding(16.dp)
-//            .verticalScroll(rememberScrollState())
-//    ) {
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // Calendrier avec les boutons <, > et +
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(550.dp)  // Augmenter la taille du calendrier ici
-//                .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
-//
-//        ) {
-//            Column {
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//                    IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-//                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Previous Month", tint = Color.White)
-//                    }
-//                    Text(
-//                        text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()),
-//                        color = Color.White,
-//                        fontWeight = FontWeight.Bold,
-//                        fontSize = 18.sp,
-//                        modifier = Modifier.padding(16.dp)
-//                    )
-//                    IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-//                        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Next Month", tint = Color.White)
-//                    }
-//                }
-//
-//                // Affichage de la grille du calendrier
-//                CalendarGrid(currentMonth = currentMonth, currentDay = currentDay)
-//            }
-//            // Bouton flottant avec effet pour afficher les options
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(16.dp),
-//                contentAlignment = Alignment.BottomEnd
-//            ) {
-//                Column(horizontalAlignment = Alignment.End) {
-//                    AnimatedVisibility(
-//                        visible = showOptions,
-//                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { it / 2 }),
-//                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(targetOffsetY = { it / 2 })
-//                    ) {
-//                        Column(horizontalAlignment = Alignment.End) {
-//                            // Bouton To Do List
-//                            FloatingActionButton(
-//                                onClick = { showToDoListDialog = true },
-//                                backgroundColor = Color(0xFFB0C4DE),
-//                                modifier = Modifier.padding(bottom = 16.dp)
-//                            ) {
-//                                Icon(Icons.Filled.List, contentDescription = "To Do List", tint = Color.Black)
-//                            }
-//
-//                            // Bouton Cours
-//                            FloatingActionButton(
-//                                onClick = { /* Action pour les cours */ },
-//                                backgroundColor = Color(0xFFB0C4DE),
-//                                modifier = Modifier.padding(bottom = 16.dp)
-//                            ) {
-//                                Icon(Icons.Filled.School, contentDescription = "Courses", tint = Color.Black)
-//                            }
-//
-//                            // Nouveau bouton pour Ajouter un événement
-//                            FloatingActionButton(
-//                                onClick = { showEventDialog = true },
-//                                backgroundColor = Color(0xFFB0C4DE),
-//                                modifier = Modifier.padding(bottom = 16.dp)
-//                            ) {
-//                                Icon(Icons.Filled.Add, contentDescription = "Add Event", tint = Color.Black)
-//                            }
-//                        }
-//                    }
-//
-//                    // Bouton flottant principal qui déclenche l'animation
-//                    FloatingActionButton(
-//                        onClick = { showOptions = !showOptions },
-//                        backgroundColor = Color(0xFF5F9EA0)
-//                    ) {
-//                        Icon(Icons.Filled.Add, contentDescription = "Options", tint = Color.White)
-//                    }
-//                }
-//            }
-//
-//            // Dialogues pour To Do List et ajout d'événements
-//            if (showEventDialog) {
-//                EventDialog(onDismiss = { showEventDialog = false })
-//            }
-//            if (showToDoListDialog) {
-//                ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
-//            }
-//
-//        }
-//
-//    }
-//}
 @Composable
 fun MonthlyTab() {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
-    var newTask by remember { mutableStateOf("") }
+    var events by remember { mutableStateOf(mutableMapOf<LocalDate, List<Event>>()) }
     val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
-
     var showEventDialog by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showToDoListDialog by remember { mutableStateOf(false) }
     var showOptions by remember { mutableStateOf(false) }
-
 
     Column(
         modifier = Modifier
@@ -174,13 +54,11 @@ fun MonthlyTab() {
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Calendrier avec les boutons <, > et +
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(550.dp)  // Augmenter la taille du calendrier ici
+                .height(550.dp)
                 .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
-
         ) {
             Column {
                 Row(
@@ -202,98 +80,103 @@ fun MonthlyTab() {
                     }
                 }
 
-                // Affichage de la grille du calendrier
-                CalendarGrid(currentMonth = currentMonth, currentDay = currentDay)
+                CalendarGrid(
+                    currentMonth = currentMonth,
+                    currentDay = currentDay,
+                    events = events,
+                    onDayClick = { selectedDate = it; showEventDialog = true }
+                )
             }
-            // Bouton flottant avec effet pour afficher les options
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                Column(horizontalAlignment = Alignment.End) {
-                    AnimatedVisibility(
-                        visible = showOptions,
-                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { it / 2 }),
-                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(targetOffsetY = { it / 2 })
-                    ) {
-                        Column(horizontalAlignment = Alignment.End) {
-                            // Bouton To Do List
-                            FloatingActionButton(
-                                onClick = { showToDoListDialog = true },
-                                backgroundColor = Color(0xFFB0C4DE),
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            ) {
-                                Icon(Icons.Filled.List, contentDescription = "To Do List", tint = Color.Black)
-                            }
-
-                            // Bouton Cours
-                            FloatingActionButton(
-                                onClick = { /* Action pour les cours */ },
-                                backgroundColor = Color(0xFFB0C4DE),
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            ) {
-                                Icon(Icons.Filled.School, contentDescription = "Courses", tint = Color.Black)
-                            }
-
-                            // Nouveau bouton pour Ajouter un événement
-                            FloatingActionButton(
-                                onClick = { showEventDialog = true },
-                                backgroundColor = Color(0xFFB0C4DE),
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            ) {
-                                Icon(Icons.Filled.Add, contentDescription = "Add Event", tint = Color.Black)
-                            }
+        // Bouton flottant avec effet pour afficher les options
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            Column(horizontalAlignment = Alignment.End) {
+                AnimatedVisibility(
+                    visible = showOptions,
+                    enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { it / 2 }),
+                    exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(targetOffsetY = { it / 2 })
+                ) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        // Bouton To Do List
+                        FloatingActionButton(
+                            onClick = { showToDoListDialog = true },
+                            backgroundColor = Color(0xFFB0C4DE),
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
+                            Icon(Icons.Filled.List, contentDescription = "To Do List", tint = Color.Black)
                         }
-                    }
 
-                    // Bouton flottant principal qui déclenche l'animation
-                    FloatingActionButton(
-                        onClick = { showOptions = !showOptions },
-                        backgroundColor = Color(0xFF5F9EA0)
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Options", tint = Color.White)
+                        // Bouton Cours
+                        FloatingActionButton(
+                            onClick = { /* Action pour les cours */ },
+                            backgroundColor = Color(0xFFB0C4DE),
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
+                            Icon(Icons.Filled.School, contentDescription = "Courses", tint = Color.Black)
+                        }
+
                     }
                 }
-            }
 
-            // Dialogues pour To Do List et ajout d'événements
-            if (showEventDialog) {
-                EventDialog(onDismiss = { showEventDialog = false })
+                // Bouton flottant principal qui déclenche l'animation
+                FloatingActionButton(
+                    onClick = { showOptions = !showOptions },
+                    backgroundColor = Color(0xFF5F9EA0)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Options", tint = Color.White)
+                }
             }
-            if (showToDoListDialog) {
-                ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
-            }
-
         }
 
+        // Dialogues pour To Do List et ajout d'événements
+        if (showToDoListDialog) {
+            ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
+        }
+
+        if (showEventDialog) {
+            EventDialog(
+                selectedDate = selectedDate,
+                onDismiss = { showEventDialog = false },
+                onEventAdded = { event ->
+                    events = events.toMutableMap().apply {
+                        put(
+                            selectedDate,
+                            (events[selectedDate] ?: emptyList()) + event
+                        )
+                    }
+                }
+            )
+        }
     }
+}
 }
 
 @Composable
-fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
+fun CalendarGrid(
+    currentMonth: YearMonth,
+    currentDay: Int,
+    events: MutableMap<LocalDate, List<Event>>,
+    onDayClick: (LocalDate) -> Unit
+) {
     val firstDayOfMonth = currentMonth.atDay(1)
     val lastDayOfMonth = currentMonth.lengthOfMonth()
 
     val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-
     // Calcul de la hauteur disponible pour la grille des jours
     val availableHeight = 400.dp // Hauteur totale de 500.dp pour la grille
     val headerHeight = 48.dp // Espace réservé pour l'en-tête avec les jours de la semaine (Mon, Tue, etc.)
     val gridHeight = availableHeight - headerHeight // Hauteur restante pour les jours
 
-    // Nombre total de jours dans le mois
     val totalDays = lastDayOfMonth
-
-    // Calcul du nombre de lignes nécessaires
     val rows = (totalDays + firstDayOfMonth.dayOfWeek.value - 1) / 7 + 1
-
-    // Calcul de la taille de chaque cellule de jour en fonction de la hauteur disponible
+   // Calcul de la taille de chaque cellule de jour en fonction de la hauteur disponible
     val dayCellHeight = gridHeight / rows
 
     Column {
-        // Affichage des jours de la semaine
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             daysOfWeek.forEach {
                 Text(
@@ -313,18 +196,21 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
                     val isToday = day == currentDay
                     val textColor = if (isToday) Color.White else Color.Gray
                     val backgroundColor = if (isToday) Color.Red else Color.Transparent
+                    val date = if (day > 0 && day <= totalDays) firstDayOfMonth.plusDays((day - 1).toLong()) else null
+
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
-                            .height(dayCellHeight) // Utilisation de la hauteur calculée pour chaque cellule
-                            .weight(1f) // Utilisation de `weight` pour une taille proportionnelle
-                            .background(backgroundColor, RoundedCornerShape(15.dp)),
+                            .height(dayCellHeight)
+                            .weight(1f)
+                            .background(backgroundColor, RoundedCornerShape(15.dp))
+                            .clickable { date?.let { onDayClick(it) } },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = dayText,
                             color = textColor,
-                            fontSize = 14.sp // Tu peux ajuster la taille de la police ici si nécessaire
+                            fontSize = 14.sp
                         )
                     }
                     day++
@@ -333,16 +219,162 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
         }
     }
 }
+@Composable
+fun EventDialog(
+    selectedDate: LocalDate,
+    onDismiss: () -> Unit,
+    onEventAdded: (Event) -> Unit
+) {
+    var eventTitle by remember { mutableStateOf("") }
+    var eventDescription by remember { mutableStateOf("") }
+    var eventStartTime by remember { mutableStateOf("") }
+    var eventEndTime by remember { mutableStateOf("") }
+    var expandedStartTime by remember { mutableStateOf(false) }
+    var expandedEndTime by remember { mutableStateOf(false) }
 
+    // Liste des heures disponibles (9 à 18 heures)
+    val availableHours = (1..24).map { "$it:00" }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Add Event for ${selectedDate.toString()}",
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2F4F4F),
+                fontSize = 18.sp
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                // Titre de l'événement
+                TextField(
+                    value = eventTitle,
+                    onValueChange = { eventTitle = it },
+                    label = { Text("Event Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(0xFFE8F5E9))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Description de l'événement
+                TextField(
+                    value = eventDescription,
+                    onValueChange = { eventDescription = it },
+                    label = { Text("Event Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(0xFFE8F5E9))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Heure de début
+                Text("Event Start Time", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expandedStartTime = !expandedStartTime }
+                        .padding(8.dp)
+                        .background(Color(0xFFB2DFDB), RoundedCornerShape(8.dp))
+                ) {
+                    Text(
+                        text = eventStartTime.ifEmpty { "Select Start Time" },
+                        modifier = Modifier.padding(8.dp),
+                        color = Color.Black
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expandedStartTime,
+                    onDismissRequest = { expandedStartTime = false }
+                ) {
+                    availableHours.forEach { hour ->
+                        DropdownMenuItem(onClick = {
+                            eventStartTime = hour
+                            expandedStartTime = false
+                        }) {
+                            Text(text = hour)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Heure de fin
+                Text("Event End Time", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expandedEndTime = !expandedEndTime }
+                        .padding(8.dp)
+                        .background(Color(0xFFB2DFDB), RoundedCornerShape(8.dp))
+                ) {
+                    Text(
+                        text = eventEndTime.ifEmpty { "Select End Time" },
+                        modifier = Modifier.padding(8.dp),
+                        color = Color.Black
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expandedEndTime,
+                    onDismissRequest = { expandedEndTime = false }
+                ) {
+                    availableHours.forEach { hour ->
+                        DropdownMenuItem(onClick = {
+                            eventEndTime = hour
+                            expandedEndTime = false
+                        }) {
+                            Text(text = hour)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val newEvent = Event(eventTitle, eventDescription, eventStartTime, eventEndTime)
+                    onEventAdded(newEvent)
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF00796B))
+            ) {
+                Text("Add", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color(0xFF00796B))
+            }
+        }
+    )
+}
+
+data class Event(
+    val title: String,
+    val description: String,
+    val startTime: String,
+    val endTime: String
+)
 
 //@Composable
-//fun EventDialog(onDismiss: () -> Unit) {
+//fun EventDialog(
+//    selectedDate: LocalDate,
+//    onDismiss: () -> Unit,
+//    onEventAdded: (Event) -> Unit
+//) {
 //    var eventTitle by remember { mutableStateOf("") }
 //    var eventDescription by remember { mutableStateOf("") }
+//    var eventTime by remember { mutableStateOf("") }
+//    var expanded by remember { mutableStateOf(false) }
+//
+//    // Liste des heures disponibles (9 à 18 heures)
+//    val availableHours = (9..18).map { "$it:00" }
 //
 //    AlertDialog(
 //        onDismissRequest = onDismiss,
-//        title = { Text("Add Event") },
+//        title = { Text("Add Event for ${selectedDate.toString()}") },
 //        text = {
 //            Column {
 //                TextField(
@@ -358,12 +390,44 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
 //                    label = { Text("Event Description") },
 //                    modifier = Modifier.fillMaxWidth()
 //                )
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                // DropdownMenu pour choisir l'heure de l'événement
+//                Text("Event Time")
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .clickable { expanded = !expanded }
+//                        .padding(8.dp)
+//                        .background(Color.Gray, RoundedCornerShape(8.dp))
+//                ) {
+//                    Text(
+//                        text = eventTime.ifEmpty { "Select Time" },
+//                        modifier = Modifier.padding(8.dp),
+//                        color = Color.White
+//                    )
+//                }
+//
+//                DropdownMenu(
+//                    expanded = expanded,
+//                    onDismissRequest = { expanded = false }
+//                ) {
+//                    availableHours.forEach { hour ->
+//                        DropdownMenuItem(onClick = {
+//                            eventTime = hour
+//                            expanded = false
+//                        }) {
+//                            Text(text = hour)
+//                        }
+//                    }
+//                }
 //            }
 //        },
 //        confirmButton = {
 //            Button(
 //                onClick = {
-//                    // Ajouter l'événement
+//                    val newEvent = Event(eventTitle, eventDescription, eventTime)
+//                    onEventAdded(newEvent)
 //                    onDismiss()
 //                }
 //            ) {
@@ -377,92 +441,13 @@ fun CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
 //        }
 //    )
 //}
-@Composable
-fun EventDialog(onDismiss: () -> Unit) {
-    var eventTitle by remember { mutableStateOf("") }
-    var eventDescription by remember { mutableStateOf("") }
+//
+//data class Event(
+//    val title: String,
+//    val description: String,
+//    val time: String
+//)
 
-    // Variables pour la sélection de la date
-    val currentYear = LocalDate.now().year
-    val currentMonth = LocalDate.now().monthValue
-    val currentDay = LocalDate.now().dayOfMonth
-
-    var selectedDay by remember { mutableStateOf(currentDay) }
-    var selectedMonth by remember { mutableStateOf(currentMonth) }
-    var selectedYear by remember { mutableStateOf(currentYear) }
-
-    // Ajustement de la liste de jours en fonction du mois et de l'année sélectionnés
-    val dayList = (1..YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()).toList()
-    val monthList = (1..12).toList()
-    val yearList = (currentYear..currentYear + 10).toList()
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Event") },
-        text = {
-            Column {
-                TextField(
-                    value = eventTitle,
-                    onValueChange = { eventTitle = it },
-                    label = { Text("Event Title") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = eventDescription,
-                    onValueChange = { eventDescription = it },
-                    label = { Text("Event Description") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Sélection de la date avec des menus déroulants compacts
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                   // modifier = Modifier.fillMaxWidth()
-                ) {
-                    DropdownMenuForSelection(
-                        label = "Day",
-                        selectedValue = selectedDay,
-                        options = dayList,
-                        onSelectionChanged = { selectedDay = it },
-                        modifier = Modifier.width(10.dp) // Limiter la largeur
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    DropdownMenuForSelection(
-                        label = "Month",
-                        selectedValue = selectedMonth,
-                        options = monthList,
-                        onSelectionChanged = { selectedMonth = it },
-                        modifier = Modifier.width(10.dp) // Limiter la largeur
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    DropdownMenuForSelection(
-                        label = "Year",
-                        selectedValue = selectedYear,
-                        options = yearList,
-                        onSelectionChanged = { selectedYear = it },
-                        modifier = Modifier.width(10.dp) // Limiter la largeur
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    // Ajouter l'événement avec la date sélectionnée
-                    onDismiss()
-                }
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
 
 @Composable
 fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
@@ -541,102 +526,5 @@ fun ToDoItem(task: String) {
     }
 }
 
-@Composable
-fun DatePickerDialog(
-    onDateSelected: (LocalDate) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val currentDate = LocalDate.now()
-    var selectedDate by remember { mutableStateOf(currentDate) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Event Date") },
-        text = {
-            Column {
-                DatePicker(selectedDate = selectedDate, onDateChange = { selectedDate = it })
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onDateSelected(selectedDate)
-                    onDismiss()
-                }
-            ) {
-                Text("Confirm")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun DatePicker(selectedDate: LocalDate, onDateChange: (LocalDate) -> Unit) {
-    // Simple DatePicker UI (you can use libraries for actual date pickers)
-    val daysInMonth = selectedDate.lengthOfMonth()
-    val firstDayOfMonth = selectedDate.withDayOfMonth(1)
-    val dayOfWeek = firstDayOfMonth.dayOfWeek.value
-    val days = (1..daysInMonth).map { LocalDate.of(selectedDate.year, selectedDate.month, it) }
-
-    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        // Display days
-        Row {
-            days.forEachIndexed { index, day ->
-                Button(
-                    onClick = { onDateChange(day) },
-                    modifier = Modifier.padding(4.dp)
-                ) {
-                    Text(text = day.dayOfMonth.toString())
-                }
-            }
-        }
-    }
-}
-@Composable
-fun DropdownMenuForSelection(
-    label: String,
-    selectedValue: Int,
-    options: List<Int>,
-    onSelectionChanged: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(
-        modifier = Modifier.fillMaxWidth().padding(4.dp)
-    ) {
-        Column {
-            Text(label, color = Color.Black, fontSize = 14.sp)
-            OutlinedTextField(
-                value = selectedValue.toString(),
-                onValueChange = { },
-                readOnly = true,
-                label = { Text(label) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                trailingIcon = {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
-                }
-            )
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                options.forEach { option ->
-                    DropdownMenuItem(onClick = {
-                        onSelectionChanged(option)
-                        expanded = false
-                    }) {
-                        Text(text = option.toString())
-                    }
-                }
-            }
-        }
-    }
-}
 
