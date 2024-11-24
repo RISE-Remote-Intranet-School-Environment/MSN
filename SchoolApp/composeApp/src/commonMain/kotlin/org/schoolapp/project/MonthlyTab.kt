@@ -33,17 +33,77 @@ import androidx.compose.material.icons.filled.School
 
 import androidx.compose.foundation.clickable
 
+import androidx.compose.foundation.border
+import androidx.compose.material.Card
+
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+
+import android.content.Context
+import androidx.compose.runtime.*
+import androidx.compose.material.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.saveable.*
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalContext
+
+
+
+
+
+
+
 
 @Composable
 fun MonthlyTab() {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
     var events by remember { mutableStateOf(mutableMapOf<LocalDate, List<Event>>()) }
+
+    // Initialize events with all days from November 2024 to December 31, 2025
+    LaunchedEffect(Unit) {
+        events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
+            .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) } // End on December 31, 2025
+            .associate { date ->
+                date to listOf(
+                    Event(
+                        title = "Control Theory",
+                        description = "Au 2F10 avec DBR",
+                        startTime = "08h00",
+                        endTime = "12h00"
+                    ),
+                    Event(
+                        title = "Software Architecture",
+                        description = "Au 1E04 avec J3L",
+                        startTime = "13h00",
+                        endTime = "16h00"
+                    ),
+                    Event(
+                        title = "Network Concepts",
+                        description = "Au 2D52 avec DSM",
+                        startTime = "17h00",
+                        endTime = "19h00"
+                    )
+
+                )
+            }
+            .toMutableMap() // Make sure it's mutable
+    }
+
     val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
     var showEventDialog by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showToDoListDialog by remember { mutableStateOf(false) }
     var showOptions by remember { mutableStateOf(false) }
+    var showEventListDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -84,7 +144,7 @@ fun MonthlyTab() {
                     currentMonth = currentMonth,
                     currentDay = currentDay,
                     events = events,
-                    onDayClick = { selectedDate = it; showEventDialog = true }
+                    onDayClick = { selectedDate = it; showEventListDialog = true }
                 )
             }
         // Bouton flottant avec effet pour afficher les options
@@ -132,9 +192,26 @@ fun MonthlyTab() {
             }
         }
 
+
+
+
         // Dialogues pour To Do List et ajout d'événements
         if (showToDoListDialog) {
-            ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false })
+            val context = LocalContext.current  // Récupérer le contexte actuel
+            ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false }, context = context)
+        }
+
+        // Display event list dialog when a day is clicked
+        if (showEventListDialog) {
+            EventListDialog(
+                selectedDate = selectedDate,
+                events = events,
+                onDismiss = { showEventListDialog = false },
+                onAddEventClick = {
+                    showEventDialog = true
+                    showEventListDialog = false
+                }
+            )
         }
 
         if (showEventDialog) {
@@ -219,6 +296,60 @@ fun CalendarGrid(
         }
     }
 }
+
+@Composable
+fun EventListDialog(
+    selectedDate: LocalDate,
+    events: Map<LocalDate, List<Event>>,
+    onDismiss: () -> Unit,
+    onAddEventClick: () -> Unit
+) {
+    // Récupération des événements pour le jour sélectionné
+    val eventsForDay = events[selectedDate] ?: emptyList()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Events for ${selectedDate.toString()}") },
+        text = {
+            Column {
+                LazyColumn {
+                    items(eventsForDay) { event ->
+                        // Affichage de chaque événement avec un encadré
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .border(2.dp, Color.Gray, shape = RoundedCornerShape(8.dp)),
+                            elevation = 4.dp
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(text = " ${event.title}", style = MaterialTheme.typography.h6)
+                                Text(text = " ${event.description}", style = MaterialTheme.typography.body2)
+                                Text(text = " Start: ${event.startTime}") // Affichage direct de l'heure de début
+                                Text(text = " End: ${event.endTime}")   // Affichage direct de l'heure de fin
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onAddEventClick) {
+                Text("Add Event")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+
+
+
+
 @Composable
 fun EventDialog(
     selectedDate: LocalDate,
@@ -358,100 +489,113 @@ data class Event(
     val endTime: String
 )
 
+
 //@Composable
-//fun EventDialog(
-//    selectedDate: LocalDate,
-//    onDismiss: () -> Unit,
-//    onEventAdded: (Event) -> Unit
-//) {
-//    var eventTitle by remember { mutableStateOf("") }
-//    var eventDescription by remember { mutableStateOf("") }
-//    var eventTime by remember { mutableStateOf("") }
-//    var expanded by remember { mutableStateOf(false) }
+//fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
+//    var newTask by remember { mutableStateOf("") }
 //
-//    // Liste des heures disponibles (9 à 18 heures)
-//    val availableHours = (9..18).map { "$it:00" }
+//    // Utilisation de mutableStateListOf pour créer un SnapshotStateList qui peut être sauvegardé
+//    val taskStates = rememberSaveable(
+//        saver = listSaver(
+//            save = { state -> state.toList() },  // Sauvegarder sous forme de liste immuable
+//            restore = { list -> mutableStateListOf(*list.toTypedArray()) }  // Restaurer sous forme de liste mutable
+//        )
+//    ) { mutableStateListOf<Boolean>().apply { repeat(tasks.size) { add(false) } } }
 //
 //    AlertDialog(
 //        onDismissRequest = onDismiss,
-//        title = { Text("Add Event for ${selectedDate.toString()}") },
+//        title = { Text("To Do List") },
 //        text = {
 //            Column {
-//                TextField(
-//                    value = eventTitle,
-//                    onValueChange = { eventTitle = it },
-//                    label = { Text("Event Title") },
-//                    modifier = Modifier.fillMaxWidth()
-//                )
-//                Spacer(modifier = Modifier.height(8.dp))
-//                TextField(
-//                    value = eventDescription,
-//                    onValueChange = { eventDescription = it },
-//                    label = { Text("Event Description") },
-//                    modifier = Modifier.fillMaxWidth()
-//                )
-//                Spacer(modifier = Modifier.height(8.dp))
-//
-//                // DropdownMenu pour choisir l'heure de l'événement
-//                Text("Event Time")
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .clickable { expanded = !expanded }
-//                        .padding(8.dp)
-//                        .background(Color.Gray, RoundedCornerShape(8.dp))
-//                ) {
-//                    Text(
-//                        text = eventTime.ifEmpty { "Select Time" },
-//                        modifier = Modifier.padding(8.dp),
-//                        color = Color.White
-//                    )
+//                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//                    items(tasks.size) { index ->
+//                        // Passage de l'état de la tâche à ToDoItem
+//                        ToDoItem(
+//                            task = tasks[index],
+//                            isChecked = taskStates[index],
+//                            onCheckedChange = { isChecked ->
+//                                taskStates[index] = isChecked
+//                            }
+//                        )
+//                    }
 //                }
 //
-//                DropdownMenu(
-//                    expanded = expanded,
-//                    onDismissRequest = { expanded = false }
+//                // Champ pour ajouter une nouvelle tâche
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 8.dp)
 //                ) {
-//                    availableHours.forEach { hour ->
-//                        DropdownMenuItem(onClick = {
-//                            eventTime = hour
-//                            expanded = false
-//                        }) {
-//                            Text(text = hour)
-//                        }
+//                    TextField(
+//                        value = newTask,
+//                        onValueChange = { newTask = it },
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .padding(end = 8.dp),
+//                        placeholder = { Text("New task") },
+//                        singleLine = true,
+//                        colors = TextFieldDefaults.textFieldColors(
+//                            focusedIndicatorColor = Color.Transparent,
+//                            unfocusedIndicatorColor = Color.Transparent
+//                        )
+//                    )
+//                    Button(
+//                        onClick = {
+//                            if (newTask.isNotBlank()) {
+//                                tasks.add(newTask)
+//                                taskStates.add(false) // Ajout de l'état pour la nouvelle tâche
+//                                newTask = ""
+//                            }
+//                        },
+//                        modifier = Modifier.padding(start = 8.dp)
+//                    ) {
+//                        Text("Add")
 //                    }
 //                }
 //            }
 //        },
 //        confirmButton = {
 //            Button(
-//                onClick = {
-//                    val newEvent = Event(eventTitle, eventDescription, eventTime)
-//                    onEventAdded(newEvent)
-//                    onDismiss()
-//                }
+//                onClick = onDismiss
 //            ) {
-//                Text("Add")
-//            }
-//        },
-//        dismissButton = {
-//            TextButton(onClick = onDismiss) {
-//                Text("Cancel")
+//                Text("Close")
 //            }
 //        }
 //    )
 //}
 //
-//data class Event(
-//    val title: String,
-//    val description: String,
-//    val time: String
-//)
-
+//@Composable
+//fun ToDoItem(task: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+//    Row(
+//        verticalAlignment = Alignment.CenterVertically,
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(Color(0xFFB0C4DE), RoundedCornerShape(8.dp))
+//            .padding(8.dp)
+//    ) {
+//        Checkbox(
+//            checked = isChecked,
+//            onCheckedChange = { onCheckedChange(it) }
+//        )
+//        Text(
+//            text = task,
+//            color = if (isChecked) Color.Gray else Color.Black,  // Changer la couleur si cochée
+//            modifier = Modifier
+//                .padding(start = 8.dp)
+//                .graphicsLayer(alpha = if (isChecked) 0.5f else 1f)  // Utiliser graphicsLayer pour l'opacité
+//        )
+//    }
+//}
 
 @Composable
-fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
+fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit, context: Context) {
     var newTask by remember { mutableStateOf("") }
+
+    // Charger l'état de la liste des tâches depuis SharedPreferences
+    val taskStates = rememberSaveable {
+        loadTaskStates(context, tasks.size)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -459,8 +603,16 @@ fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
         text = {
             Column {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(tasks) { task ->
-                        ToDoItem(task = task)
+                    items(tasks.size) { index ->
+                        // Passage de l'état de la tâche à ToDoItem
+                        ToDoItem(
+                            task = tasks[index],
+                            isChecked = taskStates[index],
+                            onCheckedChange = { isChecked ->
+                                taskStates[index] = isChecked
+                                saveTaskStates(context, taskStates)  // Sauvegarder l'état après changement
+                            }
+                        )
                     }
                 }
 
@@ -488,7 +640,9 @@ fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
                         onClick = {
                             if (newTask.isNotBlank()) {
                                 tasks.add(newTask)
+                                taskStates.add(false) // Ajout de l'état pour la nouvelle tâche
                                 newTask = ""
+                                saveTaskStates(context, taskStates)  // Sauvegarder après ajout
                             }
                         },
                         modifier = Modifier.padding(start = 8.dp)
@@ -508,8 +662,29 @@ fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
     )
 }
 
+// Fonction pour sauvegarder l'état des tâches dans SharedPreferences
+fun saveTaskStates(context: Context, taskStates: List<Boolean>) {
+    val sharedPreferences = context.getSharedPreferences("todo_preferences", Context.MODE_PRIVATE)
+    val editor = sharedPreferences.edit()
+    // Sauvegarde sous forme de chaîne, avec chaque valeur séparée par une virgule
+    editor.putString("task_states", taskStates.joinToString(","))
+    editor.apply()
+}
+
+// Fonction pour charger l'état des tâches depuis SharedPreferences
+fun loadTaskStates(context: Context, taskCount: Int): MutableList<Boolean> {
+    val sharedPreferences = context.getSharedPreferences("todo_preferences", Context.MODE_PRIVATE)
+    val savedState = sharedPreferences.getString("task_states", "")
+    val states = savedState?.split(",")?.map { it.toBoolean() }?.toMutableList() ?: mutableListOf()
+    // Remplir la liste avec des valeurs par défaut si l'état est incomplet
+    while (states.size < taskCount) {
+        states.add(false)
+    }
+    return states
+}
+
 @Composable
-fun ToDoItem(task: String) {
+fun ToDoItem(task: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -517,14 +692,20 @@ fun ToDoItem(task: String) {
             .background(Color(0xFFB0C4DE), RoundedCornerShape(8.dp))
             .padding(8.dp)
     ) {
-        Checkbox(checked = false, onCheckedChange = null)
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = { onCheckedChange(it) }
+        )
         Text(
             text = task,
-            color = Color.Black,
-            modifier = Modifier.padding(start = 8.dp)
+            color = if (isChecked) Color.Gray else Color.Black,  // Changer la couleur si cochée
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .graphicsLayer(alpha = if (isChecked) 0.5f else 1f)  // Utiliser graphicsLayer pour l'opacité
         )
     }
 }
+
 
 
 
