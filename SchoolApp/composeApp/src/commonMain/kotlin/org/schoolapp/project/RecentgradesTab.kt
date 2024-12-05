@@ -1,10 +1,10 @@
-package org.schoolapp.project
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,17 +22,27 @@ data class Grade(
 @Composable
 fun RecentgradesTab() {
     val grades = listOf(
-        Grade("PHY", "Labo 2", 14, 20),
-        Grade("CHE", "Report", 8, 10),
-        Grade("LAW", "Essay", 10, 30),
-        Grade("THE", "Exercices", 4, 15)
+        Grade("PHY", "Labo 2 : Optic", 14, 20),
+        Grade("CHE", "Report Oxydo-reduction", 8, 10),
+        Grade("LAW", "Essay Constitution", 10, 30),
+        Grade("THE", "Exercices : Bernouilli", 4, 15)
     )
+
+    var selectedSubject by remember { mutableStateOf<String?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+
+    val subjects = listOf("All") + grades.map { it.subject }.distinct()
+    val filteredGrades = if (selectedSubject != null && selectedSubject != "All") {
+        grades.filter { it.subject == selectedSubject }
+    } else {
+        grades
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .background(Color(0xFF87CEEB)) // Light blue background
+            .background(Color.White)
     ) {
         // Top Buttons
         Row(
@@ -49,7 +59,7 @@ fun RecentgradesTab() {
             "Validated : 30 ECTS",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.White
+            color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -59,17 +69,33 @@ fun RecentgradesTab() {
             "Recent Grades:",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = { /* Filter action */ },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2F4F4F)),
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            Text("Filter", color = Color.White)
+        Box {
+            Button(
+                onClick = { expanded = true },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2F4F4F)),
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                Text("Filter", color = Color.White)
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                subjects.forEach { subject ->
+                    DropdownMenuItem(onClick = {
+                        selectedSubject = subject
+                        expanded = false
+                    }) {
+                        Text(text = subject)
+                    }
+                }
+            }
         }
 
         // Grades List
@@ -77,7 +103,7 @@ fun RecentgradesTab() {
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(grades) { grade ->
+            items(filteredGrades) { grade ->
                 GradeCard(grade)
             }
         }
@@ -91,7 +117,7 @@ fun GradeCard(grade: Grade) {
             .fillMaxWidth()
             .padding(8.dp),
         elevation = 4.dp,
-        backgroundColor = Color(0xFFADD8E6) // Light blue card background
+        backgroundColor = Color(0xFFADD8E6)
     ) {
         Row(
             modifier = Modifier
@@ -115,7 +141,7 @@ fun GradeCard(grade: Grade) {
             ) {
                 Text(
                     text = grade.score.toString(),
-                    color = if (grade.score >= grade.total / 2) Color(0xFF228B22) else Color.Red, // Green for passing, red for failing
+                    color = if (grade.score >= grade.total / 2) Color(0xFF228B22) else Color.Red,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
