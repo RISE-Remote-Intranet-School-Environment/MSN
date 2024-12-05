@@ -263,6 +263,7 @@ fun GradesView(onNavigateBack: () -> Unit) {
     )
 }
 
+
 @Composable
 fun ClassesView(onNavigateBack: () -> Unit, onNavigateToProfessors: () -> Unit) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
@@ -471,3 +472,5 @@ fun RatingBar(rating: Int) {
         }
     }
 }
+
+

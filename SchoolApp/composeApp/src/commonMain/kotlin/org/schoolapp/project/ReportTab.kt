@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 data class ReportItem(
+    val trigram: String,
     val subject: String,
     val ects: Int,
     val grade: Int,
@@ -18,19 +19,37 @@ data class ReportItem(
 
 @Composable
 fun ReportTab() {
-    val reportItems = listOf(
-        ReportItem("Physics", 5, 13, 20),
-        ReportItem("Chemistry", 3, 12, 20),
-        ReportItem("Law", 7, 10, 20),
-        ReportItem("Thermodynamics", 4, 8, 20)
+    val recentGrades = listOf(
+        Grade("PHY", "Labo 2 : Optic", 14, 20),
+        Grade("CHE", "Report Oxydo-reduction", 8, 10),
+        Grade("LAW", "Essay Constitution", 10, 30),
+        Grade("THE", "Exercices : Bernouilli", 4, 15)
     )
 
-    val average = reportItems.map { it.grade.toDouble() }.average()
+    val groupedGrades = recentGrades.groupBy { it.subject }
+    val reportItems = groupedGrades.map { (trigram, grades) ->
+        val averageGrade = grades.map { it.score.toDouble() / it.total * 20 }.average()
+        val subjectName = when (trigram) {
+            "PHY" -> "Physics"
+            "CHE" -> "Chemistry"
+            "LAW" -> "Law"
+            "THE" -> "Thermodynamics"
+            else -> "Unknown"
+        }
+        val ects = when (trigram) {
+            "PHY" -> 5
+            "CHE" -> 3
+            "LAW" -> 7
+            "THE" -> 4
+            else -> 0
+        }
+        ReportItem(trigram, subjectName, ects, averageGrade.toInt(), 20)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF87CEEB)) // Light blue background
+            .background(Color.White)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -39,7 +58,7 @@ fun ReportTab() {
             text = "Report Card:",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -47,12 +66,12 @@ fun ReportTab() {
         // Report Card Table
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            backgroundColor = Color(0xFFB0C4DE), // Grayish background for the table
-            elevation = 4.dp
+                .fillMaxWidth(1f) // Adjust the width fraction here
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            backgroundColor = Color(0xFFB0C4DE),
+            elevation = 8.dp
         ) {
-            Column(modifier = Modifier.padding(8.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 reportItems.forEach { item ->
                     ReportCardRow(item)
                     Divider(color = Color.Black, thickness = 1.dp)
@@ -63,10 +82,10 @@ fun ReportTab() {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Average Grade
-        // Average Grade
+        val overallAverage = reportItems.map { it.grade.toDouble() }.average()
         Text(
-            text = "Average: 11/20",
-            fontSize = 16.sp,
+            text = "Average: ${overallAverage.toInt()}/20",
+            fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = Color.Black
         )
@@ -75,42 +94,54 @@ fun ReportTab() {
 
 @Composable
 fun ReportCardRow(item: ReportItem) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.Start
     ) {
-        // Subject Name
-        Text(
-            text = item.subject,
-            modifier = Modifier.weight(1f),
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
+        // Subject Trigram and Name
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Text(
+                text = item.trigram,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = item.subject,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        }
 
-        // ECTS Points
-        Text(
-            text = "${item.ects} ECTS",
-            modifier = Modifier.weight(1f),
-            fontSize = 16.sp,
-            color = Color.Gray
-        )
+        Spacer(modifier = Modifier.height(4.dp))
 
-        // Grade
-        Text(
-            text = item.grade.toString(),
-            modifier = Modifier.weight(1f),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (item.grade >= item.total / 2) Color(0xFF228B22) else Color.Red // Green if passing, red if failing
-        )
-
-        // Total Score
-        Text(
-            text = "/ ${item.total}",
-            modifier = Modifier.weight(0.5f),
-            fontSize = 16.sp
-        )
+        // ECTS Points, Grade, and Total Score
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "${item.ects} ECTS",
+                fontSize = 16.sp,
+                color = Color.Blue
+            )
+            Row {
+                Text(
+                    text = item.grade.toString(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (item.grade >= item.total / 2) Color(0xFF228B22) else Color.Red
+                )
+                Text(
+                    text = "/ ${item.total}",
+                    fontSize = 16.sp
+                )
+            }
+        }
     }
 }
