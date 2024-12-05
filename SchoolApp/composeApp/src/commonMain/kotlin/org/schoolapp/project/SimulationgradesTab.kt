@@ -25,7 +25,7 @@ fun SimulationgradesTab() {
     val gradesList = remember {
         mutableStateListOf(
             GradeItem("Labo 1", "40%", "24", "30"),
-            GradeItem("Labo 2", "40%", "18", "30"),
+            GradeItem("Labo 3", "40%", "18", "30"),
             GradeItem("Exercice 1", "10%", "2", "5"),
             GradeItem("Exercice 2", "10%", "4", "5")
         )
