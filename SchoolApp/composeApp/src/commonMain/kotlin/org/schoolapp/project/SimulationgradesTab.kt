@@ -12,29 +12,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import java.lang.String.format
 
 @Composable
 fun SimulationgradesTab() {
     var gradeInput by remember { mutableStateOf("") }
     var ratioInput by remember { mutableStateOf("") }
     var maxRatioInput by remember { mutableStateOf("") }
-    var average by remember { mutableStateOf("13.6") }
+    var scoreInput by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
     var selectedTab by remember { mutableStateOf("Average") }
+    var averageScore by remember { mutableStateOf<Double?>(null) }
+    var isDeleteMode by remember { mutableStateOf(false) }
 
-    val gradesList = remember {
-        mutableStateListOf(
-            GradeItem("Labo 1", "40%", "24", "30"),
-            GradeItem("Labo 3", "40%", "18", "30"),
-            GradeItem("Exercice 1", "10%", "2", "5"),
-            GradeItem("Exercice 2", "10%", "4", "5")
-        )
-    }
+    val gradesList = remember { mutableStateListOf<GradeItem>() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF5F9EA0)) // Background color similar to the screenshot
+            .background(Color.White)
             .padding(16.dp)
     ) {
         // Title
@@ -42,22 +38,11 @@ fun SimulationgradesTab() {
             text = "Simulation :",
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Load Button
-        Button(
-            onClick = { /* TODO: Implement Load functionality */ },
-            modifier = Modifier.align(Alignment.End),
-            colors = ButtonDefaults.buttonColors(Color.DarkGray)
-        ) {
-            Text(text = "Load", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Input Row
+        // Subject Name Entry Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -65,49 +50,76 @@ fun SimulationgradesTab() {
             TextField(
                 value = gradeInput,
                 onValueChange = { gradeInput = it },
-                placeholder = { Text("Insert a new grade ...") },
+                placeholder = { Text("subject name") },
                 singleLine = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Add Button Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
                 modifier = Modifier.weight(1f),
-                colors = TextFieldDefaults.textFieldColors(
-
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextField(
+                    value = ratioInput,
+                    onValueChange = { ratioInput = it },
+                    placeholder = { Text("Ratio") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = TextFieldDefaults.textFieldColors()
                 )
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-            TextField(
-                value = ratioInput,
-                onValueChange = { ratioInput = it },
-                placeholder = { Text("Ratio") },
-                singleLine = true,
-                modifier = Modifier.width(50.dp),
-                colors = TextFieldDefaults.textFieldColors(
-
+                TextField(
+                    value = scoreInput,
+                    onValueChange = { scoreInput = it },
+                    placeholder = { Text("Score") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = TextFieldDefaults.textFieldColors()
                 )
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-            TextField(
-                value = maxRatioInput,
-                onValueChange = { maxRatioInput = it },
-                placeholder = { Text("/..") },
-                singleLine = true,
-                modifier = Modifier.width(50.dp),
-                colors = TextFieldDefaults.textFieldColors(
-
+                TextField(
+                    value = maxRatioInput,
+                    onValueChange = { maxRatioInput = it },
+                    placeholder = { Text("/Total") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = TextFieldDefaults.textFieldColors()
                 )
-            )
+            }
+
             Spacer(modifier = Modifier.width(8.dp))
 
             Button(
                 onClick = {
-                    // TODO: Add logic to add the new grade to the list
-                    if (gradeInput.isNotBlank() && ratioInput.isNotBlank() && maxRatioInput.isNotBlank()) {
+                    errorMessage = validateInputs(gradeInput, ratioInput, scoreInput, maxRatioInput)
+                    if (errorMessage.isEmpty()) {
                         gradesList.add(
-                            GradeItem(gradeInput, "${ratioInput}%", "0", maxRatioInput)
+                            GradeItem(gradeInput, "${ratioInput}%", scoreInput, maxRatioInput)
                         )
                         gradeInput = ""
                         ratioInput = ""
                         maxRatioInput = ""
+                        scoreInput = ""
                     }
                 },
                 colors = ButtonDefaults.buttonColors(Color(0xFFFF6B6B))
@@ -118,13 +130,43 @@ fun SimulationgradesTab() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tabs for Average and Target
+        // Error Message
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+
+        // Load and Delete Button Row
         Row(
             modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TabButton(text = "Average", isSelected = selectedTab == "Average") {
                 selectedTab = "Average"
+                val totalRatio = gradesList.sumOf { it.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0 }
+                if (totalRatio == 100.0) {
+                    averageScore = calculateAverageScore(gradesList)
+                    errorMessage = ""
+                } else {
+                    errorMessage = "The total ratio should be 100"
+                    averageScore = null
+                }
+            }
+            Button(
+                onClick = { /* TODO: Implement Load functionality */ },
+                colors = ButtonDefaults.buttonColors(Color.DarkGray)
+            ) {
+                Text(text = "Load", color = Color.White)
+            }
+            Button(
+                onClick = { isDeleteMode = !isDeleteMode },
+                colors = ButtonDefaults.buttonColors(Color.Red)
+            ) {
+                Text(text = "Delete", color = Color.White)
             }
             TabButton(text = "Target", isSelected = selectedTab == "Target") {
                 selectedTab = "Target"
@@ -140,22 +182,64 @@ fun SimulationgradesTab() {
                 .background(Color(0xFFB0C4DE), RoundedCornerShape(8.dp))
                 .padding(8.dp)
         ) {
-            gradesList.forEach { item ->
-                GradeRow(item)
+            gradesList.forEachIndexed { index, item ->
+                GradeRow(item, isDeleteMode) {
+                    gradesList.removeAt(index)
+                }
                 Divider(color = Color.Gray.copy(alpha = 0.5f))
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Average Display
-        Text(
-            text = "Average : $average/20",
-            color = Color.White,
-            fontSize = 16.sp,
-            modifier = Modifier.align(Alignment.End)
-        )
+        // Average Score Display
+        if (averageScore != null) {
+            Text(
+                text = "Average: ${format("%.2f", averageScore)}/20",
+                color = Color.Black,
+                fontSize = 16.sp,
+                modifier = Modifier.align(Alignment.End)
+            )
+        }
     }
+}
+
+fun calculateAverageScore(gradesList: List<GradeItem>): Double {
+    var totalScore = 0.0
+    var totalRatio = 0.0
+
+    for (item in gradesList) {
+        val ratio = item.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0
+        val score = item.score.toDoubleOrNull() ?: 0.0
+        val maxScore = item.maxScore.toDoubleOrNull() ?: 1.0
+
+        val scoreConverted = (score / maxScore) * 100
+        totalScore += scoreConverted * (ratio / 100)
+        totalRatio += ratio
+    }
+
+    val finalScore = if (totalRatio > 0) (totalScore / totalRatio) * 20 else 0.0
+    return finalScore
+}
+
+fun validateInputs(grade: String, ratio: String, score: String, total: String): String {
+    if (grade.isBlank()) return "Subject name should be completed"
+    if (ratio.isBlank()) return "Ratio should be completed"
+    if (score.isBlank()) return "Score should be completed"
+    if (total.isBlank()) return "Total should be completed"
+
+    val ratioValue = ratio.toIntOrNull()
+    if (ratioValue == null || ratioValue !in 0..100) return "The ratio should be a number between 0 and 100"
+
+    val scoreValue = score.toIntOrNull()
+    if (scoreValue == null) return "Your score should only be a number"
+
+    val totalValue = total.toIntOrNull()
+    if (totalValue == null) return "The total should only be a number"
+
+    if (scoreValue > totalValue) return "Your score cannot be bigger than the total"
+
+    return ""
 }
 
 @Composable
@@ -163,17 +247,15 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-
             contentColor = Color.White
-        ),
-
-        ) {
+        )
+    ) {
         Text(text = text, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
     }
 }
 
 @Composable
-fun GradeRow(item: GradeItem) {
+fun GradeRow(item: GradeItem, isDeleteMode: Boolean, onDelete: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,6 +266,14 @@ fun GradeRow(item: GradeItem) {
         Text(text = item.ratio, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text(text = item.score, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text(text = item.maxScore, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        if (isDeleteMode) {
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(Color.Red)
+            ) {
+                Text(text = "Delete", color = Color.White)
+            }
+        }
     }
 }
 
