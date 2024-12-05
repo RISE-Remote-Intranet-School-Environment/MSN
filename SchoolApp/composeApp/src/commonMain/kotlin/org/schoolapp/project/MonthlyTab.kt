@@ -19,47 +19,23 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowDropDown
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.School
-
 import androidx.compose.foundation.clickable
-
 import androidx.compose.foundation.border
 import androidx.compose.material.Card
-
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
-
 import android.content.Context
-import androidx.compose.runtime.*
-import androidx.compose.material.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.saveable.*
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalContext
-
-
-
-
-
-
 
 
 @Composable
@@ -347,9 +323,6 @@ fun EventListDialog(
 }
 
 
-
-
-
 @Composable
 fun EventDialog(
     selectedDate: LocalDate,
@@ -489,104 +462,6 @@ data class Event(
     val endTime: String
 )
 
-
-//@Composable
-//fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
-//    var newTask by remember { mutableStateOf("") }
-//
-//    // Utilisation de mutableStateListOf pour créer un SnapshotStateList qui peut être sauvegardé
-//    val taskStates = rememberSaveable(
-//        saver = listSaver(
-//            save = { state -> state.toList() },  // Sauvegarder sous forme de liste immuable
-//            restore = { list -> mutableStateListOf(*list.toTypedArray()) }  // Restaurer sous forme de liste mutable
-//        )
-//    ) { mutableStateListOf<Boolean>().apply { repeat(tasks.size) { add(false) } } }
-//
-//    AlertDialog(
-//        onDismissRequest = onDismiss,
-//        title = { Text("To Do List") },
-//        text = {
-//            Column {
-//                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-//                    items(tasks.size) { index ->
-//                        // Passage de l'état de la tâche à ToDoItem
-//                        ToDoItem(
-//                            task = tasks[index],
-//                            isChecked = taskStates[index],
-//                            onCheckedChange = { isChecked ->
-//                                taskStates[index] = isChecked
-//                            }
-//                        )
-//                    }
-//                }
-//
-//                // Champ pour ajouter une nouvelle tâche
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(top = 8.dp)
-//                ) {
-//                    TextField(
-//                        value = newTask,
-//                        onValueChange = { newTask = it },
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .padding(end = 8.dp),
-//                        placeholder = { Text("New task") },
-//                        singleLine = true,
-//                        colors = TextFieldDefaults.textFieldColors(
-//                            focusedIndicatorColor = Color.Transparent,
-//                            unfocusedIndicatorColor = Color.Transparent
-//                        )
-//                    )
-//                    Button(
-//                        onClick = {
-//                            if (newTask.isNotBlank()) {
-//                                tasks.add(newTask)
-//                                taskStates.add(false) // Ajout de l'état pour la nouvelle tâche
-//                                newTask = ""
-//                            }
-//                        },
-//                        modifier = Modifier.padding(start = 8.dp)
-//                    ) {
-//                        Text("Add")
-//                    }
-//                }
-//            }
-//        },
-//        confirmButton = {
-//            Button(
-//                onClick = onDismiss
-//            ) {
-//                Text("Close")
-//            }
-//        }
-//    )
-//}
-//
-//@Composable
-//fun ToDoItem(task: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-//    Row(
-//        verticalAlignment = Alignment.CenterVertically,
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .background(Color(0xFFB0C4DE), RoundedCornerShape(8.dp))
-//            .padding(8.dp)
-//    ) {
-//        Checkbox(
-//            checked = isChecked,
-//            onCheckedChange = { onCheckedChange(it) }
-//        )
-//        Text(
-//            text = task,
-//            color = if (isChecked) Color.Gray else Color.Black,  // Changer la couleur si cochée
-//            modifier = Modifier
-//                .padding(start = 8.dp)
-//                .graphicsLayer(alpha = if (isChecked) 0.5f else 1f)  // Utiliser graphicsLayer pour l'opacité
-//        )
-//    }
-//}
 
 @Composable
 fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit, context: Context) {
