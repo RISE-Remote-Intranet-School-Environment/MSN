@@ -39,6 +39,8 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
 
 import java.time.DayOfWeek
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 
 
 @Composable
@@ -239,6 +241,118 @@ fun WeeklyTab() {
     }
 
 
+//@Composable
+//fun W_CalendarGrid(
+//    currentWeekStart: LocalDate,
+//    currentDay: Int,
+//    events: MutableMap<LocalDate, List<Event>>,
+//    onDayClick: (LocalDate) -> Unit
+//) {
+//    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
+//    val hours = (0..24).toList() // De 0h à 24h
+//    val weekDays = (0..4).map { currentWeekStart.plusDays(it.toLong()) }
+//
+//    Row(Modifier.fillMaxWidth()) {
+//        // Colonne des heures
+//        Column(
+//            modifier = Modifier
+//                .weight(0.15f)
+//                .verticalScroll(rememberScrollState())
+//                .padding(top = 50.dp)
+//        ) {
+//            hours.forEach { hour ->
+//                // Formatage de l'heure pour afficher 00h00, 01h00, etc.
+//                val formattedHour = String.format("%02d", hour)
+//                Text(
+//                    text = "$formattedHour:00",
+//                    color = Color.White,
+//                    fontSize = 14.sp,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(vertical = 8.dp, horizontal = 4.dp)
+//                )
+//            }
+//        }
+//
+//        // Colonnes des jours
+//        weekDays.forEachIndexed { index, date ->
+//            Column(
+//                modifier = Modifier
+//                    .weight(0.85f / 7f)
+//                    .padding(4.dp)
+//                    .background(
+//                        color = if (date.dayOfMonth == currentDay) Color.Red else Color.Transparent,
+//                        shape = RoundedCornerShape(8.dp)
+//                    )
+//                    .clickable { onDayClick(date) },
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                // Titre du jour
+//                Text(
+//                    text = "${daysOfWeek[index]}\n${date.dayOfMonth}",
+//                    color = Color.White,
+//                    fontSize = 14.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    modifier = Modifier.padding(vertical = 4.dp)
+//                )
+//
+//                // Affichage des événements avec positionnement horaire
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(1440.dp)  // Hauteur totale pour 24 heures (ajustez si nécessaire)
+//                ) {
+//                    events[date]?.let { dayEvents ->
+//                        Column(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .verticalScroll(rememberScrollState())
+//                                .padding(4.dp)
+//                        ) {
+//                            dayEvents.forEach { event ->
+//                                Box(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(vertical = 4.dp)
+//                                        .background(
+//                                            color = Color(0xFF87CEFA),
+//                                            shape = RoundedCornerShape(4.dp)
+//                                        )
+//                                        .padding(8.dp)
+//                                        .heightIn(
+//                                            min = 50.dp,
+//                                            max = 100.dp
+//                                        ) // Limite la taille de chaque événement
+//                                ) {
+//                                    Column {
+//                                        Text(
+//                                            text = event.title,
+//                                            color = Color.White,
+//                                            fontSize = 14.sp,
+//                                            fontWeight = FontWeight.Bold
+//                                        )
+//                                        Text(
+//                                            text = event.description,
+//                                            color = Color.White,
+//                                            fontSize = 12.sp
+//                                        )
+//                                        Text(
+//                                            //text = event.title,
+//                                            text = "${event.startTime} - ${event.endTime}",
+//                                            color = Color.White,
+//                                            fontSize = 12.sp,
+//                                            fontWeight = FontWeight.Bold
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 @Composable
 fun W_CalendarGrid(
     currentWeekStart: LocalDate,
@@ -249,17 +363,17 @@ fun W_CalendarGrid(
     val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
     val hours = (0..24).toList() // De 0h à 24h
     val weekDays = (0..4).map { currentWeekStart.plusDays(it.toLong()) }
+    val scrollState = rememberScrollState() // État de défilement partagé
 
     Row(Modifier.fillMaxWidth()) {
         // Colonne des heures
         Column(
             modifier = Modifier
                 .weight(0.15f)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState) // Partage l'état de défilement
                 .padding(top = 50.dp)
         ) {
             hours.forEach { hour ->
-                // Formatage de l'heure pour afficher 00h00, 01h00, etc.
                 val formattedHour = String.format("%02d", hour)
                 Text(
                     text = "$formattedHour:00",
@@ -273,56 +387,78 @@ fun W_CalendarGrid(
         }
 
         // Colonnes des jours
-        weekDays.forEachIndexed { index, date ->
-            Column(
-                modifier = Modifier
-                    .weight(0.85f / 7f)
-                    .padding(4.dp)
-                    .background(
-                        color = if (date.dayOfMonth == currentDay) Color.Red else Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable { onDayClick(date) },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Titre du jour
-                Text(
-                    text = "${daysOfWeek[index]}\n${date.dayOfMonth}",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-
-                // Affichage des événements avec positionnement horaire
-                Box(
+        LazyRow(
+            modifier = Modifier
+                .weight(0.85f)
+                .verticalScroll(scrollState) // Partage l'état de défilement
+        ) {
+            items(weekDays.size) { index ->
+                val date = weekDays[index]
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1440.dp)  // Hauteur totale pour 24 heures (ajustez si nécessaire)
+                        .weight(0.85f / 7f)
+                        .padding(4.dp)
+                        .background(
+                            color = if (date.dayOfMonth == currentDay) Color.Red else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .clickable { onDayClick(date) },
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    events[date]?.forEach { event ->
-                        val startMinutes = timeToMinutes(event.startTime)
-                        val endMinutes = timeToMinutes(event.endTime)
-                        val eventHeight = (endMinutes - startMinutes).dp
+                    // Titre du jour
+                    Text(
+                        text = "${daysOfWeek[index]}\n${date.dayOfMonth}",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = startMinutes.dp)
-                                .height(eventHeight)
-                                .background(
-                                    color = Color(0xFF87CEFA),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .padding(4.dp)
-                        ) {
-                            Text(
-                                //text = event.title,
-                                text = "${event.startTime} - ${event.endTime}",
-                                color = Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                    // Affichage des événements
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1440.dp) // Hauteur totale pour 24 heures (ajustez si nécessaire)
+                            .padding(4.dp)
+                    ) {
+                        events[date]?.let { dayEvents ->
+                            dayEvents.forEach { event ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .background(
+                                            color = Color(0xFF87CEFA),
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(8.dp)
+                                        .heightIn(
+                                            min = 50.dp,
+                                            max = 100.dp
+                                        )
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = event.title,
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = event.description,
+                                            color = Color.White,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            //text = event.title,
+                                            text = "${event.startTime} - ${event.endTime}",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -331,15 +467,19 @@ fun W_CalendarGrid(
     }
 }
 
+
 fun timeToMinutes(time: String): Int {
-    val parts = time.split("h").map { it.toIntOrNull() ?: 0 }
-    // Ajout d'une sécurité pour gérer les formats erronés
-    return if (parts.size == 2) {
-        parts[0] * 60 + parts[1]
-    } else {
-        0  // Valeur par défaut si l'heure est mal formatée
+    val formattedTime = time.replace("h", ":") // Convert "08h00" to "08:00"
+    val parts = formattedTime.split(":")
+    if (parts.size == 2) {
+        val hours = parts[0].toIntOrNull() ?: 0
+        val minutes = parts[1].toIntOrNull() ?: 0
+        return hours * 60 + minutes
     }
+    return 0
 }
+
+
 
 
 
