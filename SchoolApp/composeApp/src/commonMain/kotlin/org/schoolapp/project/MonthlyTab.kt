@@ -54,19 +54,22 @@ fun MonthlyTab() {
                         title = "Control Theory",
                         description = "Au 2F10 avec DBR",
                         startTime = "08h00",
-                        endTime = "12h00"
+                        endTime = "12h00",
+                        color = Color(0xFFFFA500) // Orange
                     ),
                     Event(
                         title = "Software Architecture",
                         description = "Au 1E04 avec J3L",
                         startTime = "13h00",
-                        endTime = "16h00"
+                        endTime = "16h00",
+                        color = Color(0xFF87CEFA) // Bleu clair
                     ),
                     Event(
                         title = "Network Concepts",
                         description = "Au 2D52 avec DSM",
                         startTime = "17h00",
-                        endTime = "19h00"
+                        endTime = "19h00",
+                        color = Color(0xFF32CD32) // Vert lime
                     )
 
                 )
@@ -459,7 +462,8 @@ data class Event(
     val title: String,
     val description: String,
     val startTime: String,
-    val endTime: String
+    val endTime: String,
+    val color: Color = Color.Gray // Nouvelle propriété pour la couleur
 )
 
 

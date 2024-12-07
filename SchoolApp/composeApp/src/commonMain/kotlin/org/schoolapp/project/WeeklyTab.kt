@@ -42,6 +42,8 @@ import java.time.DayOfWeek
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Composable
 
 
 
@@ -60,19 +62,22 @@ fun WeeklyTab() {
                         title = "Control Theory",
                         description = "Au 2F10 avec DBR",
                         startTime = "08h00",
-                        endTime = "12h00"
+                        endTime = "12h00",
+                        color = Color(0xFFFFA500) // Orange
                     ),
                     Event(
                         title = "Software Architecture",
                         description = "Au 1E04 avec J3L",
                         startTime = "13h00",
-                        endTime = "16h00"
+                        endTime = "16h00",
+                        color = Color(0xFF87CEFA) // Bleu clair
                     ),
                     Event(
                         title = "Network Concepts",
                         description = "Au 2D52 avec DSM",
                         startTime = "17h00",
-                        endTime = "19h00"
+                        endTime = "19h00",
+                        color = Color(0xFF32CD32) // Vert lime
                     )
                 )
             }
@@ -242,6 +247,140 @@ fun WeeklyTab() {
         }
     }
 
+//////////// TOUT EST OK mais sans chevauchement /////////////////
+//@Composable
+//fun W_CalendarGrid(
+//    currentWeekStart: LocalDate,
+//    currentDay: Int,
+//    events: MutableMap<LocalDate, List<Event>>,
+//    onDayClick: (LocalDate) -> Unit
+//) {
+//    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
+//    val hours = (0..24).toList() // De 0h à 24h
+//    val weekDays = (0..4).map { currentWeekStart.plusDays(it.toLong()) }
+//    val scrollState = rememberScrollState() // État de défilement vertical partagé
+//
+//    // Calcul de la hauteur de chaque heure (en dp) en fonction du nombre total d'heures et de la hauteur totale
+//    val hourHeightDp = 1440.dp / 24
+//
+//    Column(Modifier.fillMaxSize()) {
+//        // En-têtes des jours (fixes)
+//        Row(Modifier.fillMaxWidth()) {
+//            Spacer(modifier = Modifier.weight(0.15f)) // Place pour les heures
+//            weekDays.forEachIndexed { index, date ->
+//                Column(
+//                    modifier = Modifier
+//                        .weight(0.85f / 5f)
+//                        .padding(4.dp)
+//                        .background(
+//                            color = if (date.dayOfMonth == currentDay) Color.Red else Color.Transparent,
+//                            shape = RoundedCornerShape(8.dp)
+//                        )
+//                        .clickable { onDayClick(date) },
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Text(
+//                        text = "${daysOfWeek[index]}\n${date.dayOfMonth}",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        modifier = Modifier.padding(vertical = 4.dp)
+//                    )
+//                }
+//            }
+//        }
+//
+//        // Contenu défilable (heures + événements)
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .weight(1f) // Remplit tout l'espace disponible
+//                .verticalScroll(scrollState)
+//        ) {
+//            // Colonne des heures
+//            Column(
+//                modifier = Modifier
+//                    .weight(0.15f)
+//            ) {
+//                hours.forEach { hour ->
+//                    val formattedHour = String.format("%02d", hour)
+//                    Text(
+//                        text = "$formattedHour:00",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(hourHeightDp) // La hauteur des heures est maintenant dynamique
+//                            .padding(vertical = 4.dp, horizontal = 4.dp)
+//                    )
+//                }
+//            }
+//
+//            // Colonnes des événements
+//            Row(
+//                modifier = Modifier.weight(0.85f)
+//            ) {
+//                weekDays.forEach { date ->
+//                    BoxWithConstraints(
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .padding(4.dp)
+//                            .height(1440.dp) // Hauteur totale pour 24 heures
+//                    ) {
+//                        val density = LocalDensity.current // Récupération du contexte de densité
+//                        val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
+//
+//                        // Affichage des événements pour chaque date
+//                        events[date]?.forEach { event ->
+//                            // Calcul des offsets en fonction du temps et de la hauteur totale
+//                            val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+//                            val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
+//                            val eventHeightPx = endOffsetPx - startOffsetPx
+//
+//                            // Conversion des pixels en Dp
+//                            val startOffset = startOffsetPx / density.density // Conversion de pixels en Dp
+//                            val eventHeight = eventHeightPx / density.density // Conversion de pixels en Dp
+//
+//                            Box(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .offset(y = startOffset.dp) // Placement de l'événement
+//                                    .height(eventHeight.dp) // Hauteur de l'événement
+//                                    .background(
+//                                        color = Color(0xFF87CEFA),
+//                                        shape = RoundedCornerShape(4.dp)
+//                                    )
+//                                    .padding(8.dp)
+//                            ) {
+//                                Column {
+//                                    Text(
+//                                        text = event.title,
+//                                        color = Color.White,
+//                                        fontSize = 14.sp,
+//                                        fontWeight = FontWeight.Bold
+//                                    )
+//                                    Text(
+//                                        text = event.description,
+//                                        color = Color.White,
+//                                        fontSize = 12.sp
+//                                    )
+//                                    Text(
+//                                        text = "${event.startTime} - ${event.endTime}",
+//                                        color = Color.White,
+//                                        fontSize = 12.sp,
+//                                        fontWeight = FontWeight.Bold
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//////////////////////////////////////////
+
 
 @Composable
 fun W_CalendarGrid(
@@ -325,46 +464,58 @@ fun W_CalendarGrid(
                         val density = LocalDensity.current // Récupération du contexte de densité
                         val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
 
+                        // Calculer les chevauchements des événements
+                        val dayEvents = events[date] ?: emptyList()
+                        val overlappingEvents = calculateOverlappingEvents(dayEvents)
+
                         // Affichage des événements pour chaque date
-                        events[date]?.forEach { event ->
-                            // Calcul des offsets en fonction du temps et de la hauteur totale
-                            val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
-                            val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
-                            val eventHeightPx = endOffsetPx - startOffsetPx
+                        overlappingEvents.forEach { group ->
+                            val groupSize = group.size
 
-                            // Conversion des pixels en Dp
-                            val startOffset = startOffsetPx / density.density // Conversion de pixels en Dp
-                            val eventHeight = eventHeightPx / density.density // Conversion de pixels en Dp
+                            group.forEachIndexed { index, event ->
+                                val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+                                val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
+                                val eventHeightPx = endOffsetPx - startOffsetPx
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .offset(y = startOffset.dp) // Placement de l'événement
-                                    .height(eventHeight.dp) // Hauteur de l'événement
-                                    .background(
-                                        color = Color(0xFF87CEFA),
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
-                                    .padding(8.dp)
-                            ) {
-                                Column {
-                                    Text(
-                                        text = event.title,
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = event.description,
-                                        color = Color.White,
-                                        fontSize = 12.sp
-                                    )
-                                    Text(
-                                        text = "${event.startTime} - ${event.endTime}",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                // Conversion des pixels en Dp
+                                val startOffset = startOffsetPx / density.density
+                                val eventHeight = eventHeightPx / density.density
+
+                                // Calcul de la largeur ajustée en fonction du nombre d’événements dans le groupe
+                                val eventWidth = (maxWidth / groupSize)
+                                val horizontalOffsetDp = eventWidth * index
+
+                                // Placement de l’événement dans le calendrier
+                                Box(
+                                    modifier = Modifier
+                                        .width(eventWidth) // Largeur proportionnelle au groupe
+                                        .offset(x = horizontalOffsetDp, y = startOffset.dp) // Offset horizontal et vertical
+                                        .height(eventHeight.dp) // Hauteur de l’événement
+                                        .background(
+                                            color = event.color,
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(4.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = event.title,
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = event.description,
+                                            color = Color.White,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = "${event.startTime} - ${event.endTime}",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -373,6 +524,30 @@ fun W_CalendarGrid(
             }
         }
     }
+}
+
+fun calculateOverlappingEvents(events: List<Event>): List<List<Event>> {
+    val sortedEvents = events.sortedBy { it.startTime }
+    val overlappingGroups = mutableListOf<MutableList<Event>>()
+
+    sortedEvents.forEach { event ->
+        val addedToGroup = overlappingGroups.any { group ->
+            val lastEventInGroup = group.last()
+            val isOverlapping =
+                event.startTime < lastEventInGroup.endTime && event.endTime > lastEventInGroup.startTime
+
+            if (isOverlapping) {
+                group.add(event)
+            }
+            isOverlapping
+        }
+
+        if (!addedToGroup) {
+            overlappingGroups.add(mutableListOf(event))
+        }
+    }
+
+    return overlappingGroups
 }
 
 
