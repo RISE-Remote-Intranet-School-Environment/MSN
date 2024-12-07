@@ -243,146 +243,6 @@ fun WeeklyTab() {
     }
 
 
-//@Composable
-//fun W_CalendarGrid(
-//    currentWeekStart: LocalDate,
-//    currentDay: Int,
-//    events: MutableMap<LocalDate, List<Event>>,
-//    onDayClick: (LocalDate) -> Unit
-//) {
-//    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
-//    val hours = (0..24).toList() // De 0h à 24h
-//    val weekDays = (0..4).map { currentWeekStart.plusDays(it.toLong()) }
-//    val scrollState = rememberScrollState() // État de défilement vertical partagé
-//
-//    Column(Modifier.fillMaxSize()) {
-//        // En-têtes des jours (fixes)
-//        Row(Modifier.fillMaxWidth()) {
-//            Spacer(modifier = Modifier.weight(0.15f)) // Place pour les heures
-//            weekDays.forEachIndexed { index, date ->
-//                Column(
-//                    modifier = Modifier
-//                        .weight(0.85f / 5f)
-//                        .padding(4.dp)
-//                        .background(
-//                            color = if (date.dayOfMonth == currentDay) Color.Red else Color.Transparent,
-//                            shape = RoundedCornerShape(8.dp)
-//                        )
-//                        .clickable { onDayClick(date) },
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Text(
-//                        text = "${daysOfWeek[index]}\n${date.dayOfMonth}",
-//                        color = Color.White,
-//                        fontSize = 14.sp,
-//                        fontWeight = FontWeight.Bold,
-//                        modifier = Modifier.padding(vertical = 4.dp)
-//                    )
-//                }
-//            }
-//        }
-//
-//        // Contenu défilable (heures + événements)
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .weight(1f) // Remplit tout l'espace disponible
-//                .verticalScroll(scrollState)
-//        ) {
-//            // Colonne des heures
-//            Column(
-//                modifier = Modifier
-//                    .weight(0.15f)
-//            ) {
-//                hours.forEach { hour ->
-//                    val formattedHour = String.format("%02d", hour)
-//                    Text(
-//                        text = "$formattedHour:00",
-//                        color = Color.White,
-//                        fontSize = 14.sp,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(vertical = 8.dp, horizontal = 4.dp)
-//                    )
-//                }
-//            }
-//
-//            // Colonnes des événements
-//            Row(
-//                modifier = Modifier.weight(0.85f)
-//            ) {
-//                weekDays.forEach { date ->
-//                    BoxWithConstraints(
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .padding(4.dp)
-//                            .height(1440.dp) // Hauteur totale pour 24 heures
-//                    ) {
-//                        val density = LocalDensity.current // Récupération du contexte de densité
-//                        val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
-//
-//                        // Affichage des événements pour chaque date
-//                        events[date]?.forEach { event ->
-//                            val startOffsetPx = timeToOffset(event.startTime, totalHeightPx)
-//                            val endOffsetPx = timeToOffset(event.endTime, totalHeightPx)
-//                            val eventHeightPx = endOffsetPx - startOffsetPx
-//
-//                            val startOffset = startOffsetPx / density.density // Conversion de pixels en Dp
-//                            val eventHeight = eventHeightPx / density.density // Conversion de pixels en Dp
-//
-//                            Box(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .offset(y = startOffset.dp)
-//                                    .height(eventHeight.dp)
-//                                    .background(
-//                                        color = Color(0xFF87CEFA),
-//                                        shape = RoundedCornerShape(4.dp)
-//                                    )
-//                                    .padding(8.dp)
-//                            ) {
-//                                Column {
-//                                    Text(
-//                                        text = event.title,
-//                                        color = Color.White,
-//                                        fontSize = 14.sp,
-//                                        fontWeight = FontWeight.Bold
-//                                    )
-//                                    Text(
-//                                        text = event.description,
-//                                        color = Color.White,
-//                                        fontSize = 12.sp
-//                                    )
-//                                    Text(
-//                                        text = "${event.startTime} - ${event.endTime}",
-//                                        color = Color.White,
-//                                        fontSize = 12.sp,
-//                                        fontWeight = FontWeight.Bold
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//
-//
-//fun timeToOffset(time: String, totalHeightPx: Float): Float {
-//    // Suppression du caractère 'h' et séparation de l'heure et des minutes
-//    val (hour, minute) = time.split("h").map { it.toInt() }
-//
-//    val totalMinutesInDay = 24 * 60
-//    val eventStartTimeInMinutes = hour * 60 + minute
-//
-//    // Calcul du décalage en fonction du nombre total de minutes dans la journée
-//    return (eventStartTimeInMinutes / totalMinutesInDay.toFloat()) * totalHeightPx
-//}
-
-
 @Composable
 fun W_CalendarGrid(
     currentWeekStart: LocalDate,
@@ -468,8 +328,8 @@ fun W_CalendarGrid(
                         // Affichage des événements pour chaque date
                         events[date]?.forEach { event ->
                             // Calcul des offsets en fonction du temps et de la hauteur totale
-                            val startOffsetPx = timeToOffset(event.startTime, totalHeightPx)
-                            val endOffsetPx = timeToOffset(event.endTime, totalHeightPx)
+                            val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+                            val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
                             val eventHeightPx = endOffsetPx - startOffsetPx
 
                             // Conversion des pixels en Dp
@@ -514,8 +374,6 @@ fun W_CalendarGrid(
         }
     }
 }
-
-
 
 
 fun timeToOffset(time: String, totalHeightPx: Float): Float {

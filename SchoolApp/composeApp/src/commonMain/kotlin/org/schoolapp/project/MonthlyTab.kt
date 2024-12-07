@@ -337,7 +337,7 @@ fun EventDialog(
     var expandedEndTime by remember { mutableStateOf(false) }
 
     // Liste des heures disponibles (9 à 18 heures)
-    val availableHours = (1..24).map { "$it:00" }
+    val availableHours = (0..24).map { "${it}h00" }
 
     AlertDialog(
         onDismissRequest = onDismiss,
