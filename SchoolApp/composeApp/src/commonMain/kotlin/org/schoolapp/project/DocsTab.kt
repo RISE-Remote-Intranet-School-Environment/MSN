@@ -18,27 +18,26 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun DocsTab() {
-    var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Summaries", "Solutions", "Tests & Exams")
-
-    // Filtres (états) avec "No..." comme valeur par défaut
+    // Filtres principaux
+    var selectedDocumentType by remember { mutableStateOf("No Type") }
     var selectedGrade by remember { mutableStateOf("No Grades") }
     var selectedYear by remember { mutableStateOf("No Years") }
     var selectedLesson by remember { mutableStateOf("No Lessons") }
     var showShareDialog by remember { mutableStateOf(false) }
 
-    // Données pour chaque onglet
+    // Données pour chaque type de document
     val summaries = remember { mutableStateListOf<String>() }
     val solutions = remember { mutableStateListOf<String>() }
     val exams = remember { mutableStateListOf<String>() }
 
-    val currentDocuments = when (selectedTab) {
-        0 -> summaries
-        1 -> solutions
-        else -> exams
+    val currentDocuments = when (selectedDocumentType) {
+        "Summaries" -> summaries
+        "Solutions" -> solutions
+        "Tests & Exams" -> exams
+        else -> emptyList()
     }
 
-    // Documents filtrés (aucun document n'est affiché par défaut avec "No...")
+    // Documents filtrés
     val filteredDocuments = currentDocuments.filter { document ->
         (selectedGrade != "No Grades" && document.contains(selectedGrade)) &&
                 (selectedYear != "No Years" && document.contains(selectedYear)) &&
@@ -46,20 +45,6 @@ fun DocsTab() {
     }
 
     Scaffold(
-        topBar = {
-            Column {
-                // Barre d'onglets pour les types de documents
-                TabRow(selectedTabIndex = selectedTab) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            text = { Text(title, fontWeight = FontWeight.Bold) }
-                        )
-                    }
-                }
-            }
-        },
         floatingActionButton = {
             // Bouton pour partager un document
             FloatingActionButton(
@@ -86,6 +71,14 @@ fun DocsTab() {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Filters", style = MaterialTheme.typography.h6, modifier = Modifier.padding(bottom = 8.dp))
+
+                    // Filtre par Type de document
+                    DropdownFilter(
+                        label = "Document Type",
+                        options = listOf("No Type", "Summaries", "Solutions", "Tests & Exams"),
+                        selectedOption = selectedDocumentType,
+                        onOptionSelected = { selectedDocumentType = it }
+                    )
 
                     // Filtre par Grade
                     DropdownFilter(
@@ -116,7 +109,7 @@ fun DocsTab() {
             // Liste des documents filtrés
             if (filteredDocuments.isNotEmpty()) {
                 Text(
-                    text = "Filtered Documents for ${tabs[selectedTab]}",
+                    text = "Filtered Documents for $selectedDocumentType",
                     style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -142,12 +135,12 @@ fun DocsTab() {
     if (showShareDialog) {
         ShareDocumentDialog(
             onDismiss = { showShareDialog = false },
-            onDocumentShared = { name, grade, year, lesson ->
+            onDocumentShared = { name, grade, year, lesson, type ->
                 val newDocument = "$name - $lesson - $grade - $year"
-                when (selectedTab) {
-                    0 -> summaries.add(newDocument)
-                    1 -> solutions.add(newDocument)
-                    2 -> exams.add(newDocument)
+                when (type) {
+                    "Summaries" -> summaries.add(newDocument)
+                    "Solutions" -> solutions.add(newDocument)
+                    "Tests & Exams" -> exams.add(newDocument)
                 }
                 showShareDialog = false
             }
@@ -199,23 +192,21 @@ fun DocumentCard(document: String) {
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = document,
-                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            Text("This is a description of the document.", style = MaterialTheme.typography.body2)
-        }
+        Text(
+            text = document,
+            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
 @Composable
 fun ShareDocumentDialog(
     onDismiss: () -> Unit,
-    onDocumentShared: (String, String, String, String) -> Unit
+    onDocumentShared: (String, String, String, String, String) -> Unit
 ) {
     var documentName by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf("Summaries") }
     var selectedGrade by remember { mutableStateOf("Grade 1") }
     var selectedYear by remember { mutableStateOf("2024") }
     var selectedLesson by remember { mutableStateOf("Math") }
@@ -230,6 +221,12 @@ fun ShareDocumentDialog(
                     onValueChange = { documentName = it },
                     label = { Text("Document Name") },
                     modifier = Modifier.fillMaxWidth()
+                )
+                DropdownFilter(
+                    label = "Document Type",
+                    options = listOf("Summaries", "Solutions", "Tests & Exams"),
+                    selectedOption = selectedType,
+                    onOptionSelected = { selectedType = it }
                 )
                 DropdownFilter(
                     label = "Grade",
@@ -253,7 +250,7 @@ fun ShareDocumentDialog(
         },
         confirmButton = {
             Button(onClick = {
-                onDocumentShared(documentName, selectedGrade, selectedYear, selectedLesson)
+                onDocumentShared(documentName, selectedGrade, selectedYear, selectedLesson, selectedType)
             }) {
                 Text("Share")
             }
