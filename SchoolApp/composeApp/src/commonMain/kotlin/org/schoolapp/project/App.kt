@@ -1,6 +1,6 @@
 package org.schoolapp.project
 
-import DocsTab
+//import DocsTab
 import RecentgradesTab
 import ReportTab
 import androidx.compose.material.*
