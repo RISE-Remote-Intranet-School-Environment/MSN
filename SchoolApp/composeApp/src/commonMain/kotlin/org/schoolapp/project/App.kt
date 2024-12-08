@@ -414,7 +414,7 @@ fun ProfessorItem(professor: Professor) {
                 text = "Courses: ${professor.courseCount}",
                 style = MaterialTheme.typography.body2
             )
-            RatingBar(rating = professor.rating)
+            RatingBar2(rating = professor.rating)
         }
 
         IconButton(onClick = { }) {
