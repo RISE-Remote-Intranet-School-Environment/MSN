@@ -49,13 +49,14 @@ import androidx.compose.runtime.Composable
 @Composable
 fun DailyTab() {
     var currentDay by remember { mutableStateOf(LocalDate.now()) }
-    var events by remember { mutableStateOf(mutableMapOf<LocalDate, List<Event>>()) }
+    var events by remember { mutableStateOf(mutableMapOf<LocalDate, MutableList<Event>>()) }
+
 
     LaunchedEffect(Unit) {
         events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
             .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) }
             .associate { date ->
-                date to listOf(
+                date to mutableListOf(
                     Event(
                         title = "Control Theory",
                         description = "Au 2F10 avec DBR",
@@ -81,6 +82,7 @@ fun DailyTab() {
             }
             .toMutableMap()
     }
+
 
     val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
     var showEventDialog by remember { mutableStateOf(false) }
@@ -225,7 +227,9 @@ fun DailyTab() {
                         events = events.toMutableMap().apply {
                             put(
                                 selectedDate,
-                                (events[selectedDate] ?: emptyList()) + event
+                                (events[selectedDate]?.toMutableList() ?: mutableListOf()).apply {
+                                    add(event)
+                                }
                             )
                         }
                     }
@@ -238,7 +242,8 @@ fun DailyTab() {
 @Composable
 fun D_CalendarGrid(
     currentDay: LocalDate,
-    events: MutableMap<LocalDate, List<Event>>,
+//    events: MutableMap<LocalDate, List<Event>>,
+    events: MutableMap<LocalDate, MutableList<Event>>,
     onDayClick: (LocalDate) -> Unit
 ) {
     val scrollState = rememberScrollState() // État de défilement vertical partagé

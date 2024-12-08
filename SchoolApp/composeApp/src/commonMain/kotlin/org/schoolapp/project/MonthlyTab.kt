@@ -36,20 +36,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import android.content.Context
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.filled.Delete
 
 
 @Composable
 fun MonthlyTab() {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
-    var events by remember { mutableStateOf(mutableMapOf<LocalDate, List<Event>>()) }
+    var events by remember { mutableStateOf(mutableMapOf<LocalDate, MutableList<Event>>()) }
+
 
     // Initialize events with all days from November 2024 to December 31, 2025
     LaunchedEffect(Unit) {
         events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
             .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) } // End on December 31, 2025
             .associate { date ->
-                date to listOf(
+                date to mutableListOf(
                     Event(
                         title = "Control Theory",
                         description = "Au 2F10 avec DBR",
@@ -201,7 +204,9 @@ fun MonthlyTab() {
                     events = events.toMutableMap().apply {
                         put(
                             selectedDate,
-                            (events[selectedDate] ?: emptyList()) + event
+                            (events[selectedDate]?.toMutableList() ?: mutableListOf()).apply {
+                                add(event)
+                            }
                         )
                     }
                 }
@@ -215,7 +220,8 @@ fun MonthlyTab() {
 fun CalendarGrid(
     currentMonth: YearMonth,
     currentDay: Int,
-    events: MutableMap<LocalDate, List<Event>>,
+//    events: MutableMap<LocalDate, List<Event>>,
+    events: MutableMap<LocalDate, MutableList<Event>>,
     onDayClick: (LocalDate) -> Unit
 ) {
     val firstDayOfMonth = currentMonth.atDay(1)
@@ -276,15 +282,64 @@ fun CalendarGrid(
     }
 }
 
-@Composable
+//@Composable
+//fun EventListDialog(
+//    selectedDate: LocalDate,
+//    events: Map<LocalDate, List<Event>>,
+//    onDismiss: () -> Unit,
+//    onAddEventClick: () -> Unit
+//) {
+//    // Récupération des événements pour le jour sélectionné
+//    val eventsForDay = events[selectedDate] ?: emptyList()
+//
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text("Events for ${selectedDate.toString()}") },
+//        text = {
+//            Column {
+//                LazyColumn {
+//                    items(eventsForDay) { event ->
+//                        // Affichage de chaque événement avec un encadré
+//                        Card(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(vertical = 8.dp)
+//                                .border(2.dp, Color.Gray, shape = RoundedCornerShape(8.dp)),
+//                            elevation = 4.dp
+//                        ) {
+//                            Column(modifier = Modifier.padding(16.dp)) {
+//                                Text(text = " ${event.title}", style = MaterialTheme.typography.h6)
+//                                Text(text = " ${event.description}", style = MaterialTheme.typography.body2)
+//                                Text(text = " Start: ${event.startTime}") // Affichage direct de l'heure de début
+//                                Text(text = " End: ${event.endTime}")   // Affichage direct de l'heure de fin
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        },
+//        confirmButton = {
+//            Button(onClick = onAddEventClick) {
+//                Text("Add Event")
+//            }
+//        },
+//        dismissButton = {
+//            TextButton(onClick = onDismiss) {
+//                Text("Close")
+//            }
+//        }
+//    )
+//}
+
+//////// AVEC DELETE /////////////
+ @Composable
 fun EventListDialog(
     selectedDate: LocalDate,
-    events: Map<LocalDate, List<Event>>,
+    events: MutableMap<LocalDate, MutableList<Event>>,
     onDismiss: () -> Unit,
     onAddEventClick: () -> Unit
 ) {
-    // Récupération des événements pour le jour sélectionné
-    val eventsForDay = events[selectedDate] ?: emptyList()
+    val eventsForDay = events[selectedDate] ?: mutableListOf()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -293,7 +348,6 @@ fun EventListDialog(
             Column {
                 LazyColumn {
                     items(eventsForDay) { event ->
-                        // Affichage de chaque événement avec un encadré
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -304,8 +358,25 @@ fun EventListDialog(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(text = " ${event.title}", style = MaterialTheme.typography.h6)
                                 Text(text = " ${event.description}", style = MaterialTheme.typography.body2)
-                                Text(text = " Start: ${event.startTime}") // Affichage direct de l'heure de début
-                                Text(text = " End: ${event.endTime}")   // Affichage direct de l'heure de fin
+                                Text(text = " Start: ${event.startTime}")
+                                Text(text = " End: ${event.endTime}")
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.End,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            eventsForDay.remove(event) // Supprime l'événement
+                                            if (eventsForDay.isEmpty()) {
+                                                events.remove(selectedDate) // Supprime la clé si liste vide
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                                    ) {
+                                        Text("Delete", color = Color.White)
+                                    }
+                                }
                             }
                         }
                     }
@@ -467,14 +538,89 @@ data class Event(
 )
 
 
-@Composable
-fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit, context: Context) {
-    var newTask by remember { mutableStateOf("") }
+//@Composable
+//fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit, context: Context) {
+//    var newTask by remember { mutableStateOf("") }
+//
+//    // Charger l'état de la liste des tâches depuis SharedPreferences
+//    val taskStates = rememberSaveable {
+//        loadTaskStates(context, tasks.size)
+//    }
+//
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text("To Do List") },
+//        text = {
+//            Column {
+//                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//                    items(tasks.size) { index ->
+//                        // Passage de l'état de la tâche à ToDoItem
+//                        ToDoItem(
+//                            task = tasks[index],
+//                            isChecked = taskStates[index],
+//                            onCheckedChange = { isChecked ->
+//                                taskStates[index] = isChecked
+//                                saveTaskStates(context, taskStates)  // Sauvegarder l'état après changement
+//                            }
+//                        )
+//                    }
+//                }
+//
+//                // Champ pour ajouter une nouvelle tâche
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 8.dp)
+//                ) {
+//                    TextField(
+//                        value = newTask,
+//                        onValueChange = { newTask = it },
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .padding(end = 8.dp),
+//                        placeholder = { Text("New task") },
+//                        singleLine = true,
+//                        colors = TextFieldDefaults.textFieldColors(
+//                            focusedIndicatorColor = Color.Transparent,
+//                            unfocusedIndicatorColor = Color.Transparent
+//                        )
+//                    )
+//                    Button(
+//                        onClick = {
+//                            if (newTask.isNotBlank()) {
+//                                tasks.add(newTask)
+//                                taskStates.add(false) // Ajout de l'état pour la nouvelle tâche
+//                                newTask = ""
+//                                saveTaskStates(context, taskStates)  // Sauvegarder après ajout
+//                            }
+//                        },
+//                        modifier = Modifier.padding(start = 8.dp)
+//                    ) {
+//                        Text("Add")
+//                    }
+//                }
+//            }
+//        },
+//        confirmButton = {
+//            Button(
+//                onClick = onDismiss
+//            ) {
+//                Text("Close")
+//            }
+//        }
+//    )
+//}
 
-    // Charger l'état de la liste des tâches depuis SharedPreferences
-    val taskStates = rememberSaveable {
-        loadTaskStates(context, tasks.size)
-    }
+////////// AVEC DELETE ////////////
+@Composable
+fun ToDoListDialog(
+    tasks: MutableList<String>,
+    onDismiss: () -> Unit,
+    context: Context
+) {
+    var newTask by remember { mutableStateOf("") }
+    val taskStates = rememberSaveable { loadTaskStates(context, tasks.size) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -482,49 +628,51 @@ fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit, context: C
         text = {
             Column {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(tasks.size) { index ->
-                        // Passage de l'état de la tâche à ToDoItem
-                        ToDoItem(
-                            task = tasks[index],
-                            isChecked = taskStates[index],
-                            onCheckedChange = { isChecked ->
-                                taskStates[index] = isChecked
-                                saveTaskStates(context, taskStates)  // Sauvegarder l'état après changement
+                    itemsIndexed(tasks) { index, task ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ToDoItem(
+                                task = task,
+                                isChecked = taskStates[index],
+                                onCheckedChange = { isChecked ->
+                                    taskStates[index] = isChecked
+                                    saveTaskStates(context, taskStates)
+                                }
+                            )
+                            IconButton(
+                                onClick = {
+                                    tasks.removeAt(index) // Supprime la tâche
+                                    taskStates.removeAt(index) // Supprime l'état associé
+                                    saveTaskStates(context, taskStates)
+                                }
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Task")
                             }
-                        )
+                        }
                     }
                 }
-
-                // Champ pour ajouter une nouvelle tâche
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
                     TextField(
                         value = newTask,
                         onValueChange = { newTask = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
                         placeholder = { Text("New task") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.textFieldColors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        )
+                        singleLine = true
                     )
                     Button(
                         onClick = {
                             if (newTask.isNotBlank()) {
                                 tasks.add(newTask)
-                                taskStates.add(false) // Ajout de l'état pour la nouvelle tâche
+                                taskStates.add(false)
                                 newTask = ""
-                                saveTaskStates(context, taskStates)  // Sauvegarder après ajout
+                                saveTaskStates(context, taskStates)
                             }
-                        },
-                        modifier = Modifier.padding(start = 8.dp)
+                        }
                     ) {
                         Text("Add")
                     }
@@ -532,14 +680,13 @@ fun ToDoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit, context: C
             }
         },
         confirmButton = {
-            Button(
-                onClick = onDismiss
-            ) {
+            Button(onClick = onDismiss) {
                 Text("Close")
             }
         }
     )
 }
+
 
 // Fonction pour sauvegarder l'état des tâches dans SharedPreferences
 fun saveTaskStates(context: Context, taskStates: List<Boolean>) {
