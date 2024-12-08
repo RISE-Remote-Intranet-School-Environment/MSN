@@ -19,281 +19,752 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
-
+import java.time.format.DateTimeFormatter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.School
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.material.Card
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.saveable.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import android.content.Context
+import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalContext
+
+import java.time.DayOfWeek
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Composable
+
 
 @Composable
 fun DailyTab() {
-    var newTask by remember { mutableStateOf("") }
-    val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
+    var currentDay by remember { mutableStateOf(LocalDate.now()) }
+    var events by remember { mutableStateOf(mutableMapOf<LocalDate, List<Event>>()) }
 
-    var showD_EventDialog by remember { mutableStateOf(false) } // Gérer l'affichage de la pop-up
-    var showD_TodoListDialog by remember { mutableStateOf(false) } // Pop-up pour les tâches
-    var currentMonth by remember { mutableStateOf(YearMonth.now()) } // Mois courant
-    val currentDay = LocalDate.now().dayOfMonth // Jour actuel
+    LaunchedEffect(Unit) {
+        events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
+            .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) }
+            .associate { date ->
+                date to listOf(
+                    Event(
+                        title = "Control Theory",
+                        description = "Au 2F10 avec DBR",
+                        startTime = "08h00",
+                        endTime = "12h00",
+                        color = Color(0xFFFFA500) // Orange
+                    ),
+                    Event(
+                        title = "Software Architecture",
+                        description = "Au 1E04 avec J3L",
+                        startTime = "13h00",
+                        endTime = "16h00",
+                        color = Color(0xFF87CEFA) // Bleu clair
+                    ),
+                    Event(
+                        title = "Network Concepts",
+                        description = "Au 2D52 avec DSM",
+                        startTime = "17h00",
+                        endTime = "19h00",
+                        color = Color(0xFF32CD32) // Vert lime
+                    )
+                )
+            }
+            .toMutableMap()
+    }
+
+    val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
+    var showEventDialog by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showToDoListDialog by remember { mutableStateOf(false) }
+    var showEventListDialog by remember { mutableStateOf(false) }
+    var showOptions by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF5F9EA0))
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Calendrier avec les boutons <, > et +
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(350.dp)  // Augmenter la taille du calendrier ici
+                .height(550.dp)
                 .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
         ) {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Previous Month", tint = Color.White)
+                    IconButton(onClick = { currentDay = currentDay.minusDays(1) }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Previous Day",
+                            tint = Color.White
+                        )
                     }
                     Text(
-                        text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                        text = currentDay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(16.dp)
                     )
-                    IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-                        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Next Month", tint = Color.White)
+                    IconButton(onClick = { currentDay = currentDay.plusDays(1) }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Next Day",
+                            tint = Color.White
+                        )
                     }
                 }
 
-                // Affichage de la grille du calendrier
-                D_CalendarGrid(currentMonth = currentMonth, currentDay = currentDay)
+                // Grille quotidienne
+                D_CalendarGrid(
+                    currentDay = currentDay,
+                    events = events,
+                    onDayClick = { selectedDate = it; showEventListDialog = true }
+                )
             }
 
-            // Bouton + pour ajouter un événement
+            //Bouton flottant avec effet pour afficher les options
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
             ) {
-                IconButton(
-                    onClick = { showD_EventDialog = true },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter) // Align the button to the top-right
-                        .padding(16.dp)
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Event", tint = Color.White)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Bouton Courses
-        Button(
-            onClick = { /* Action pour les cours */ },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFFD3D3D3))
-        ) {
-            Text(text = "Courses")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        // Liste des tâches transformée en bouton
-        Button(
-            onClick = { showD_TodoListDialog = true },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFFD3D3D3))
-        ) {
-            Text(text = "To Do List")
-        }
-
-        // Pop-up pour afficher les tâches et ajouter une nouvelle tâche
-        if (showD_TodoListDialog) {
-            D_TodoListDialog(tasks = tasks, onDismiss = { showD_TodoListDialog = false })
-        }
-    }
-
-    // Pop-up pour ajouter un événement personnel
-    if (showD_EventDialog) {
-        D_EventDialog(onDismiss = { showD_EventDialog = false })
-    }
-}
-
-@Composable
-fun D_CalendarGrid(currentMonth: YearMonth, currentDay: Int) {
-    val firstDayOfMonth = currentMonth.atDay(1)
-    val lastDayOfMonth = currentMonth.lengthOfMonth()
-
-    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-
-    Column {
-        // Affichage des jours de la semaine
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            daysOfWeek.forEach {
-                Text(
-                    text = it,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(4.dp)
-                )
-            }
-        }
-
-        var day = 1 - firstDayOfMonth.dayOfWeek.value
-        for (week in 1..6) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                for (i in 1..7) {
-                    val dayText = if (day > 0 && day <= lastDayOfMonth) day.toString() else ""
-                    val isToday = day == currentDay
-                    val textColor = if (isToday) Color.White else Color.Gray
-                    val backgroundColor = if (isToday) Color.Red else Color.Transparent
-                    Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .size(30.dp)
-                            .background(backgroundColor, RoundedCornerShape(15.dp)),
-                        contentAlignment = Alignment.Center
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedVisibility(
+                        visible = showOptions,
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
+                            initialOffsetY = { it / 2 }),
+                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(
+                            targetOffsetY = { it / 2 })
                     ) {
-                        Text(
-                            text = dayText,
-                            color = textColor,
-                            fontSize = 14.sp
-                        )
-                    }
-                    day++
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun D_EventDialog(onDismiss: () -> Unit) {
-    var eventTitle by remember { mutableStateOf("") }
-    var eventDescription by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Event") },
-        text = {
-            Column {
-                TextField(
-                    value = eventTitle,
-                    onValueChange = { eventTitle = it },
-                    label = { Text("Event Title") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = eventDescription,
-                    onValueChange = { eventDescription = it },
-                    label = { Text("Event Description") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    // Ajouter l'événement
-                    onDismiss()
-                }
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun D_TodoListDialog(tasks: MutableList<String>, onDismiss: () -> Unit) {
-    var newTask by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("To Do List") },
-        text = {
-            Column {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(tasks) { task ->
-                        D_TodoItem(task = task)
-                    }
-                }
-
-                // Champ pour ajouter une nouvelle tâche
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    TextField(
-                        value = newTask,
-                        onValueChange = { newTask = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        placeholder = { Text("New task") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.textFieldColors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        )
-                    )
-                    Button(
-                        onClick = {
-                            if (newTask.isNotBlank()) {
-                                tasks.add(newTask)
-                                newTask = ""
+                        Column(horizontalAlignment = Alignment.End) {
+                            FloatingActionButton(
+                                onClick = { showToDoListDialog = true },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(
+                                    Icons.Filled.List,
+                                    contentDescription = "To Do List",
+                                    tint = Color.Black
+                                )
                             }
-                        },
-                        modifier = Modifier.padding(start = 8.dp)
+
+                            FloatingActionButton(
+                                onClick = { /* Action pour les cours */ },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(
+                                    Icons.Filled.School,
+                                    contentDescription = "Courses",
+                                    tint = Color.Black
+                                )
+                            }
+                        }
+                    }
+
+                    FloatingActionButton(
+                        onClick = { showOptions = !showOptions },
+                        backgroundColor = Color(0xFF5F9EA0)
                     ) {
-                        Text("Add")
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = "Options",
+                            tint = Color.White
+                        )
                     }
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss
-            ) {
-                Text("Close")
+
+            // Dialogues pour To Do List et ajout d'événements
+            if (showToDoListDialog) {
+                val context = LocalContext.current
+                ToDoListDialog(
+                    tasks = tasks,
+                    onDismiss = { showToDoListDialog = false },
+                    context = context
+                )
+            }
+
+            // Display event list dialog when a day is clicked
+            if (showEventListDialog) {
+                EventListDialog(
+                    selectedDate = selectedDate,
+                    events = events,
+                    onDismiss = { showEventListDialog = false },
+                    onAddEventClick = {
+                        showEventDialog = true
+                        showEventListDialog = false
+                    }
+                )
+            }
+
+            if (showEventDialog) {
+                EventDialog(
+                    selectedDate = selectedDate,
+                    onDismiss = { showEventDialog = false },
+                    onEventAdded = { event ->
+                        events = events.toMutableMap().apply {
+                            put(
+                                selectedDate,
+                                (events[selectedDate] ?: emptyList()) + event
+                            )
+                        }
+                    }
+                )
             }
         }
-    )
+    }
 }
 
 @Composable
-fun D_TodoItem(task: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFB0C4DE), RoundedCornerShape(8.dp))
-            .padding(8.dp)
-    ) {
-        Checkbox(checked = false, onCheckedChange = null)
-        Text(
-            text = task,
-            color = Color.Black,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+fun D_CalendarGrid(
+    currentDay: LocalDate,
+    events: MutableMap<LocalDate, List<Event>>,
+    onDayClick: (LocalDate) -> Unit
+) {
+    val scrollState = rememberScrollState() // État de défilement vertical partagé
+    val hours = (0..24).toList() // De 0h à 24h
+    // Calcul de la hauteur de chaque heure (en dp) en fonction du nombre total d'heures et de la hauteur totale
+    val hourHeightDp = 1440.dp / 24
+//    val dailyDays = (0..0).map { currentDay.plusDays(it.toLong()) }
+    val dailyDays = listOf(currentDay) // Liste avec un seul jour: le jour actuel
+    val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+    Column(Modifier.fillMaxSize()) {
+        // En-tête du jour
+        Row(Modifier.fillMaxWidth()) {
+            Spacer(modifier = Modifier.weight(0.15f))
+            dailyDays.forEachIndexed { index, date ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .background(
+                            color = Color(0x80D3D3D3),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .clickable { onDayClick(date) },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Affichage du jour actuel uniquement (au lieu d'afficher toute la plage des jours)
+                    Text(
+//                        text = "${daysOfWeek[date.dayOfWeek.ordinal]} - ${currentDay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+                        text = daysOfWeek[date.dayOfWeek.ordinal],
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            }
+        }
+
+            // Contenu défilable (heures + événements)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f) // Remplit tout l'espace disponible
+                    .verticalScroll(scrollState)
+            ) {
+                // Colonne des heures
+                Column(
+                    modifier = Modifier
+                        .weight(0.15f)
+                ) {
+                    hours.forEach { hour ->
+                        val formattedHour = String.format("%02d", hour)
+                        Text(
+                            text = "$formattedHour:00",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(hourHeightDp)
+                                .padding(vertical = 4.dp, horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                // Colonnes des événements
+                Row(
+                    modifier = Modifier.weight(0.85f)
+                ) {
+                    dailyDays.forEach { date ->
+                        BoxWithConstraints(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp)
+                                .height(1440.dp) // Hauteur totale pour 24 heures
+                        ) {
+                            val density = LocalDensity.current // Récupération du contexte de densité
+                            val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
+
+                            // Calculer les chevauchements des événements
+                            val dayEvents = events[currentDay] ?: emptyList()
+                            val overlappingEvents = calculateOverlappingEvents(dayEvents)
+
+                            // Affichage des événements pour chaque date
+                            overlappingEvents.forEach { group ->
+                                val groupSize = group.size
+
+                                group.forEachIndexed { index, event ->
+                                    val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+                                    val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
+                                    val eventHeightPx = endOffsetPx - startOffsetPx
+
+                                    // Conversion des pixels en Dp
+                                    val startOffset = startOffsetPx / density.density
+                                    val eventHeight = eventHeightPx / density.density
+
+                                    // Calcul de la largeur ajustée en fonction du nombre d’événements dans le groupe
+                                    val eventWidth = (maxWidth / groupSize)
+                                    val horizontalOffsetDp = eventWidth * index
+
+                                    // Placement de l’événement dans le calendrier
+                                    Box(
+                                        modifier = Modifier
+                                            .width(eventWidth) // Largeur proportionnelle au groupe
+                                            .offset(
+                                                x = horizontalOffsetDp,
+                                                y = startOffset.dp
+                                            ) // Offset horizontal et vertical
+                                            .height(eventHeight.dp) // Hauteur de l’événement
+                                            .background(
+                                                color = event.color,
+                                                shape = RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(4.dp)
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = event.title,
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = event.description,
+                                                color = Color.White,
+                                                fontSize = 12.sp
+                                            )
+                                            Text(
+                                                text = "${event.startTime} - ${event.endTime}",
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-}
+//@Composable
+//fun DailyTab() {
+//    var currentWeekStart by remember { mutableStateOf(LocalDate.now().with(DayOfWeek.MONDAY)) }
+//    var currentDay by remember { mutableStateOf(LocalDate.now())}
+//    var events by remember { mutableStateOf(mutableMapOf<LocalDate, List<Event>>()) }
+//
+//    LaunchedEffect(Unit) {
+//        events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
+//            .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) }
+//            .associate { date ->
+//                date to listOf(
+//                    Event(
+//                        title = "Control Theory",
+//                        description = "Au 2F10 avec DBR",
+//                        startTime = "08h00",
+//                        endTime = "12h00",
+//                        color = Color(0xFFFFA500) // Orange
+//                    ),
+//                    Event(
+//                        title = "Software Architecture",
+//                        description = "Au 1E04 avec J3L",
+//                        startTime = "13h00",
+//                        endTime = "16h00",
+//                        color = Color(0xFF87CEFA) // Bleu clair
+//                    ),
+//                    Event(
+//                        title = "Network Concepts",
+//                        description = "Au 2D52 avec DSM",
+//                        startTime = "17h00",
+//                        endTime = "19h00",
+//                        color = Color(0xFF32CD32) // Vert lime
+//                    )
+//                )
+//            }
+//            .toMutableMap()
+//    }
+//
+//    val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
+//    var showEventDialog by remember { mutableStateOf(false) }
+//    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+//    var showToDoListDialog by remember { mutableStateOf(false) }
+//    var showEventListDialog by remember { mutableStateOf(false) }
+//    var showOptions by remember { mutableStateOf(false) }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color(0xFF5F9EA0))
+//            .padding(16.dp)
+//    ) {
+//        //Spacer(modifier = Modifier.height(8.dp))
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(550.dp)
+//                .background(Color(0xFF2F4F4F), RoundedCornerShape(12.dp))
+//        )
+//        {
+//            Column {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(vertical = 8.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    IconButton(onClick = { currentDay = currentDay.minusDays(1) }) { // Décrémenter la date de 1 jour
+//                        Icon(
+//                            imageVector = Icons.Default.ArrowBack,
+//                            contentDescription = "Previous Day",
+//                            tint = Color.White
+//                        )
+//                    }
+//                    Text(
+//                        text = currentDay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+//                        color = Color.White,
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 18.sp,
+//                        modifier = Modifier.padding(16.dp)
+//                    )
+//                    IconButton(onClick = { currentDay = currentDay.plusDays(1) }) { // Incrémenter la date de 1 jour
+//                        Icon(
+//                            imageVector = Icons.Default.ArrowForward,
+//                            contentDescription = "Next Day",
+//                            tint = Color.White
+//                        )
+//                    }
+//                }
+//
+//                //Spacer(modifier = Modifier.height(8.dp))
+//
+//                // Grille hebdomadaire
+//                D_CalendarGrid(
+//                    currentWeekStart = currentWeekStart,
+//                    currentDay = currentDay,
+//                    events = events,
+//                    onDayClick = { selectedDate = it; showEventListDialog = true }
+//                )
+//            }
+//
+//            //Bouton flottant avec effet pour afficher les options
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(16.dp),
+//                contentAlignment = Alignment.BottomEnd
+//            ) {
+//                Column(horizontalAlignment = Alignment.End) {
+//                    AnimatedVisibility(
+//                        visible = showOptions,
+//                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
+//                            initialOffsetY = { it / 2 }),
+//                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(
+//                            targetOffsetY = { it / 2 })
+//                    ) {
+//                        Column(horizontalAlignment = Alignment.End) {
+//                            FloatingActionButton(
+//                                onClick = { showToDoListDialog = true },
+//                                backgroundColor = Color(0xFFB0C4DE),
+//                                modifier = Modifier.padding(bottom = 16.dp)
+//                            ) {
+//                                Icon(
+//                                    Icons.Filled.List,
+//                                    contentDescription = "To Do List",
+//                                    tint = Color.Black
+//                                )
+//                            }
+//
+//                            FloatingActionButton(
+//                                onClick = { /* Action pour les cours */ },
+//                                backgroundColor = Color(0xFFB0C4DE),
+//                                modifier = Modifier.padding(bottom = 16.dp)
+//                            ) {
+//                                Icon(
+//                                    Icons.Filled.School,
+//                                    contentDescription = "Courses",
+//                                    tint = Color.Black
+//                                )
+//                            }
+//                        }
+//                    }
+//
+//                    FloatingActionButton(
+//                        onClick = { showOptions = !showOptions },
+//                        backgroundColor = Color(0xFF5F9EA0)
+//                    ) {
+//                        Icon(
+//                            Icons.Filled.Add,
+//                            contentDescription = "Options",
+//                            tint = Color.White
+//                        )
+//                    }
+//                }
+//            }
+//
+//            // Dialogues pour To Do List et ajout d'événements
+//            if (showToDoListDialog) {
+//                val context = LocalContext.current
+//                ToDoListDialog(
+//                    tasks = tasks,
+//                    onDismiss = { showToDoListDialog = false },
+//                    context = context
+//                )
+//            }
+//
+//            // Display event list dialog when a day is clicked
+//            if (showEventListDialog) {
+//                EventListDialog(
+//                    selectedDate = selectedDate,
+//                    events = events,
+//                    onDismiss = { showEventListDialog = false },
+//                    onAddEventClick = {
+//                        showEventDialog = true
+//                        showEventListDialog = false
+//                    }
+//                )
+//            }
+//
+//            if (showEventDialog) {
+//                EventDialog(
+//                    selectedDate = selectedDate,
+//                    onDismiss = { showEventDialog = false },
+//                    onEventAdded = { event ->
+//                        events = events.toMutableMap().apply {
+//                            put(
+//                                selectedDate,
+//                                (events[selectedDate] ?: emptyList()) + event
+//                            )
+//                        }
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
+//
+//
+//
+//
+//@Composable
+//fun D_CalendarGrid(
+//    currentWeekStart: LocalDate,
+//    currentDay: LocalDate,
+//    events: MutableMap<LocalDate, List<Event>>,
+//    onDayClick: (LocalDate) -> Unit
+//) {
+//    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+//    val hours = (0..24).toList() // De 0h à 24h
+//    val weekDays = (0..0).map { currentWeekStart.plusDays(it.toLong()) }
+//    val scrollState = rememberScrollState() // État de défilement vertical partagé
+//
+//    // Calcul de la hauteur de chaque heure (en dp) en fonction du nombre total d'heures et de la hauteur totale
+//    val hourHeightDp = 1440.dp / 24
+//
+//    Column(Modifier.fillMaxSize()) {
+//        // En-têtes des jours (fixes)
+//        Row(Modifier.fillMaxWidth()) {
+//            Spacer(modifier = Modifier.weight(0.15f)) // Place pour les heures
+//            weekDays.forEachIndexed { index, date ->
+//                Column(
+//                    modifier = Modifier
+//                        .weight(0.85f / 5f)
+//                        .padding(4.dp)
+//                        .background(
+//                            color = if (date == currentDay) Color.Red else Color.Transparent,
+//                            shape = RoundedCornerShape(8.dp)
+//                        )
+//                        .clickable { onDayClick(date) },
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Text(
+//                        text = "${daysOfWeek[index]}\n${date.dayOfMonth}",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        modifier = Modifier.padding(vertical = 4.dp)
+//                    )
+//                }
+//            }
+//        }
+//
+//        // Contenu défilable (heures + événements)
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .weight(1f) // Remplit tout l'espace disponible
+//                .verticalScroll(scrollState)
+//        ) {
+//            // Colonne des heures
+//            Column(
+//                modifier = Modifier
+//                    .weight(0.15f)
+//            ) {
+//                hours.forEach { hour ->
+//                    val formattedHour = String.format("%02d", hour)
+//                    Text(
+//                        text = "$formattedHour:00",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(hourHeightDp) // La hauteur des heures est maintenant dynamique
+//                            .padding(vertical = 4.dp, horizontal = 4.dp)
+//                    )
+//                }
+//            }
+//
+//            // Colonnes des événements
+//            Row(
+//                modifier = Modifier.weight(0.85f)
+//            ) {
+//                weekDays.forEach { date ->
+//                    BoxWithConstraints(
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .padding(4.dp)
+//                            .height(1440.dp) // Hauteur totale pour 24 heures
+//                    ) {
+//                        val density = LocalDensity.current // Récupération du contexte de densité
+//                        val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
+//
+//                        // Calculer les chevauchements des événements
+//                        val dayEvents = events[date] ?: emptyList()
+//                        val overlappingEvents = calculateOverlappingEvents(dayEvents)
+//
+//                        // Affichage des événements pour chaque date
+//                        overlappingEvents.forEach { group ->
+//                            val groupSize = group.size
+//
+//                            group.forEachIndexed { index, event ->
+//                                val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+//                                val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
+//                                val eventHeightPx = endOffsetPx - startOffsetPx
+//
+//                                // Conversion des pixels en Dp
+//                                val startOffset = startOffsetPx / density.density
+//                                val eventHeight = eventHeightPx / density.density
+//
+//                                // Calcul de la largeur ajustée en fonction du nombre d’événements dans le groupe
+//                                val eventWidth = (maxWidth / groupSize)
+//                                val horizontalOffsetDp = eventWidth * index
+//
+//                                // Placement de l’événement dans le calendrier
+//                                Box(
+//                                    modifier = Modifier
+//                                        .width(eventWidth) // Largeur proportionnelle au groupe
+//                                        .offset(x = horizontalOffsetDp, y = startOffset.dp) // Offset horizontal et vertical
+//                                        .height(eventHeight.dp) // Hauteur de l’événement
+//                                        .background(
+//                                            color = event.color,
+//                                            shape = RoundedCornerShape(4.dp)
+//                                        )
+//                                        .padding(4.dp)
+//                                ) {
+//                                    Column {
+//                                        Text(
+//                                            text = event.title,
+//                                            color = Color.White,
+//                                            fontSize = 14.sp,
+//                                            fontWeight = FontWeight.Bold
+//                                        )
+//                                        Text(
+//                                            text = event.description,
+//                                            color = Color.White,
+//                                            fontSize = 12.sp
+//                                        )
+//                                        Text(
+//                                            text = "${event.startTime} - ${event.endTime}",
+//                                            color = Color.White,
+//                                            fontSize = 12.sp,
+//                                            fontWeight = FontWeight.Bold
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+
+
+//////////////// Ces fonctions sont dispo de chez WeeklyTab.kt ////////////////////////////////
+//fun calculateOverlappingEvents(events: List<Event>): List<List<Event>> {
+//    val sortedEvents = events.sortedBy { it.startTime }
+//    val overlappingGroups = mutableListOf<MutableList<Event>>()
+//
+//    sortedEvents.forEach { event ->
+//        val addedToGroup = overlappingGroups.any { group ->
+//            val lastEventInGroup = group.last()
+//            val isOverlapping =
+//                event.startTime < lastEventInGroup.endTime && event.endTime > lastEventInGroup.startTime
+//
+//            if (isOverlapping) {
+//                group.add(event)
+//            }
+//            isOverlapping
+//        }
+//
+//        if (!addedToGroup) {
+//            overlappingGroups.add(mutableListOf(event))
+//        }
+//    }
+//
+//    return overlappingGroups
+//}
+//
+//
+//fun timeToOffset(time: String, totalHeightPx: Float): Float {
+//    // Suppression du caractère 'h' et séparation de l'heure et des minutes
+//    val (hour, minute) = time.split("h").map { it.toInt() }
+//
+//    val totalMinutesInDay = 24 * 60
+//    val eventStartTimeInMinutes = hour * 60 + minute
+//
+//    // Calcul du décalage proportionnel en fonction du totalHeightPx (en pixels)
+//    return (eventStartTimeInMinutes.toFloat() / totalMinutesInDay.toFloat()) * totalHeightPx
+//}
+
+
+
+
