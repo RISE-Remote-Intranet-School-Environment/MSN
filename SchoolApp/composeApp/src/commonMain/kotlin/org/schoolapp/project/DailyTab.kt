@@ -239,18 +239,168 @@ fun DailyTab() {
     }
 }
 
+//@Composable
+//fun D_CalendarGrid(
+//    currentDay: LocalDate,
+////    events: MutableMap<LocalDate, List<Event>>,
+//    events: MutableMap<LocalDate, MutableList<Event>>,
+//    onDayClick: (LocalDate) -> Unit
+//) {
+//    val scrollState = rememberScrollState() // État de défilement vertical partagé
+//    val hours = (0..24).toList() // De 0h à 24h
+//    // Calcul de la hauteur de chaque heure (en dp) en fonction du nombre total d'heures et de la hauteur totale
+//    val hourHeightDp = 1440.dp / 24
+////    val dailyDays = (0..0).map { currentDay.plusDays(it.toLong()) }
+//    val dailyDays = listOf(currentDay) // Liste avec un seul jour: le jour actuel
+//    val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+//
+//
+//    Column(Modifier.fillMaxSize()) {
+//        // En-tête du jour
+//        Row(Modifier.fillMaxWidth()) {
+//            Spacer(modifier = Modifier.weight(0.15f))
+//            dailyDays.forEachIndexed { index, date ->
+//                Column(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .padding(4.dp)
+//                        .background(
+//                            color = Color(0x80D3D3D3),
+//                            shape = RoundedCornerShape(8.dp)
+//                        )
+//                        .clickable { onDayClick(date) },
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    // Affichage du jour actuel uniquement (au lieu d'afficher toute la plage des jours)
+//                    Text(
+////                        text = "${daysOfWeek[date.dayOfWeek.ordinal]} - ${currentDay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+//                        text = daysOfWeek[date.dayOfWeek.ordinal],
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        modifier = Modifier.padding(vertical = 4.dp)
+//                    )
+//                }
+//            }
+//        }
+//
+//            // Contenu défilable (heures + événements)
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .weight(1f) // Remplit tout l'espace disponible
+//                    .verticalScroll(scrollState)
+//            ) {
+//                // Colonne des heures
+//                Column(
+//                    modifier = Modifier
+//                        .weight(0.15f)
+//                ) {
+//                    hours.forEach { hour ->
+//                        val formattedHour = String.format("%02d", hour)
+//                        Text(
+//                            text = "$formattedHour:00",
+//                            color = Color.White,
+//                            fontSize = 14.sp,
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(hourHeightDp)
+//                                .padding(vertical = 4.dp, horizontal = 4.dp)
+//                        )
+//                    }
+//                }
+//
+//                // Colonnes des événements
+//                Row(
+//                    modifier = Modifier.weight(0.85f)
+//                ) {
+//                    dailyDays.forEach { date ->
+//                        BoxWithConstraints(
+//                            modifier = Modifier
+//                                .weight(1f)
+//                                .padding(4.dp)
+//                                .height(1440.dp) // Hauteur totale pour 24 heures
+//                        ) {
+//                            val density = LocalDensity.current // Récupération du contexte de densité
+//                            val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
+//
+//                            // Calculer les chevauchements des événements
+//                            val dayEvents = events[currentDay] ?: emptyList()
+//                            val overlappingEvents = calculateOverlappingEvents(dayEvents)
+//
+//                            // Affichage des événements pour chaque date
+//                            overlappingEvents.forEach { group ->
+//                                val groupSize = group.size
+//
+//                                group.forEachIndexed { index, event ->
+//                                    val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+//                                    val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
+//                                    val eventHeightPx = endOffsetPx - startOffsetPx
+//
+//                                    // Conversion des pixels en Dp
+//                                    val startOffset = startOffsetPx / density.density
+//                                    val eventHeight = eventHeightPx / density.density
+//
+//                                    // Calcul de la largeur ajustée en fonction du nombre d’événements dans le groupe
+//                                    val eventWidth = (maxWidth / groupSize)
+//                                    val horizontalOffsetDp = eventWidth * index
+//
+//                                    // Placement de l’événement dans le calendrier
+//                                    Box(
+//                                        modifier = Modifier
+//                                            .width(eventWidth) // Largeur proportionnelle au groupe
+//                                            .offset(
+//                                                x = horizontalOffsetDp,
+//                                                y = startOffset.dp
+//                                            ) // Offset horizontal et vertical
+//                                            .height(eventHeight.dp) // Hauteur de l’événement
+//                                            .background(
+//                                                color = event.color,
+//                                                shape = RoundedCornerShape(4.dp)
+//                                            )
+//                                            .padding(4.dp)
+//                                    ) {
+//                                        Column {
+//                                            Text(
+//                                                text = event.title,
+//                                                color = Color.White,
+//                                                fontSize = 14.sp,
+//                                                fontWeight = FontWeight.Bold
+//                                            )
+//                                            Text(
+//                                                text = event.description,
+//                                                color = Color.White,
+//                                                fontSize = 12.sp
+//                                            )
+//                                            Text(
+//                                                text = "${event.startTime} - ${event.endTime}",
+//                                                color = Color.White,
+//                                                fontSize = 12.sp,
+//                                                fontWeight = FontWeight.Bold
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+
 @Composable
 fun D_CalendarGrid(
     currentDay: LocalDate,
-//    events: MutableMap<LocalDate, List<Event>>,
     events: MutableMap<LocalDate, MutableList<Event>>,
     onDayClick: (LocalDate) -> Unit
 ) {
     val scrollState = rememberScrollState() // État de défilement vertical partagé
     val hours = (0..24).toList() // De 0h à 24h
-    // Calcul de la hauteur de chaque heure (en dp) en fonction du nombre total d'heures et de la hauteur totale
-    val hourHeightDp = 1440.dp / 24
-//    val dailyDays = (0..0).map { currentDay.plusDays(it.toLong()) }
+
+    val hourHeightDp = 1440.dp / 24 // Hauteur de chaque heure en dp
+
     val dailyDays = listOf(currentDay) // Liste avec un seul jour: le jour actuel
     val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
@@ -270,9 +420,7 @@ fun D_CalendarGrid(
                         .clickable { onDayClick(date) },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Affichage du jour actuel uniquement (au lieu d'afficher toute la plage des jours)
                     Text(
-//                        text = "${daysOfWeek[date.dayOfWeek.ordinal]} - ${currentDay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
                         text = daysOfWeek[date.dayOfWeek.ordinal],
                         color = Color.White,
                         fontSize = 14.sp,
@@ -283,101 +431,94 @@ fun D_CalendarGrid(
             }
         }
 
-            // Contenu défilable (heures + événements)
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f) // Remplit tout l'espace disponible
+                .verticalScroll(scrollState)
+        ) {
+            // Colonne des heures
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f) // Remplit tout l'espace disponible
-                    .verticalScroll(scrollState)
+                    .weight(0.15f)
             ) {
-                // Colonne des heures
-                Column(
-                    modifier = Modifier
-                        .weight(0.15f)
-                ) {
-                    hours.forEach { hour ->
-                        val formattedHour = String.format("%02d", hour)
-                        Text(
-                            text = "$formattedHour:00",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(hourHeightDp)
-                                .padding(vertical = 4.dp, horizontal = 4.dp)
-                        )
-                    }
+                hours.forEach { hour ->
+                    val formattedHour = String.format("%02d", hour)
+                    Text(
+                        text = "$formattedHour:00",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(hourHeightDp)
+                            .padding(vertical = 4.dp, horizontal = 4.dp)
+                    )
                 }
+            }
 
-                // Colonnes des événements
-                Row(
-                    modifier = Modifier.weight(0.85f)
-                ) {
-                    dailyDays.forEach { date ->
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp)
-                                .height(1440.dp) // Hauteur totale pour 24 heures
-                        ) {
-                            val density = LocalDensity.current // Récupération du contexte de densité
-                            val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
+            // Colonnes des événements
+            Row(
+                modifier = Modifier.weight(0.85f)
+            ) {
+                dailyDays.forEach { date ->
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(4.dp)
+                            .height(1440.dp) // Hauteur totale pour 24 heures
+                    ) {
+                        val density = LocalDensity.current // Récupération du contexte de densité
+                        val totalHeightPx = maxHeight.value * density.density // Conversion de Dp en pixels
 
-                            // Calculer les chevauchements des événements
-                            val dayEvents = events[currentDay] ?: emptyList()
-                            val overlappingEvents = calculateOverlappingEvents(dayEvents)
+                        // Filtrer les événements visibles
+                        val dayEvents = events[currentDay]?.filter { it.isVisible } ?: emptyList()
+                        val overlappingEvents = calculateOverlappingEvents(dayEvents)
 
-                            // Affichage des événements pour chaque date
-                            overlappingEvents.forEach { group ->
-                                val groupSize = group.size
+                        overlappingEvents.forEach { group ->
+                            val groupSize = group.size
+                            group.forEachIndexed { index, event ->
+                                val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
+                                val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
+                                val eventHeightPx = endOffsetPx - startOffsetPx
 
-                                group.forEachIndexed { index, event ->
-                                    val startOffsetPx = timeToOffset(event.startTime, totalHeightPx) + 30f
-                                    val endOffsetPx = timeToOffset(event.endTime, totalHeightPx) + 50f
-                                    val eventHeightPx = endOffsetPx - startOffsetPx
+                                val startOffset = startOffsetPx / density.density
+                                val eventHeight = eventHeightPx / density.density
 
-                                    // Conversion des pixels en Dp
-                                    val startOffset = startOffsetPx / density.density
-                                    val eventHeight = eventHeightPx / density.density
+                                val eventWidth = (maxWidth / groupSize)
+                                val horizontalOffsetDp = eventWidth * index
 
-                                    // Calcul de la largeur ajustée en fonction du nombre d’événements dans le groupe
-                                    val eventWidth = (maxWidth / groupSize)
-                                    val horizontalOffsetDp = eventWidth * index
-
-                                    // Placement de l’événement dans le calendrier
-                                    Box(
-                                        modifier = Modifier
-                                            .width(eventWidth) // Largeur proportionnelle au groupe
-                                            .offset(
-                                                x = horizontalOffsetDp,
-                                                y = startOffset.dp
-                                            ) // Offset horizontal et vertical
-                                            .height(eventHeight.dp) // Hauteur de l’événement
-                                            .background(
-                                                color = event.color,
-                                                shape = RoundedCornerShape(4.dp)
-                                            )
-                                            .padding(4.dp)
-                                    ) {
-                                        Column {
-                                            Text(
-                                                text = event.title,
-                                                color = Color.White,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = event.description,
-                                                color = Color.White,
-                                                fontSize = 12.sp
-                                            )
-                                            Text(
-                                                text = "${event.startTime} - ${event.endTime}",
-                                                color = Color.White,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
+                                Box(
+                                    modifier = Modifier
+                                        .width(eventWidth)
+                                        .offset(
+                                            x = horizontalOffsetDp,
+                                            y = startOffset.dp
+                                        )
+                                        .height(eventHeight.dp)
+                                        .background(
+                                            color = event.color,
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(4.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = event.title,
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = event.description,
+                                            color = Color.White,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = "${event.startTime} - ${event.endTime}",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
@@ -387,6 +528,9 @@ fun D_CalendarGrid(
             }
         }
     }
+}
+
+
 //@Composable
 //fun DailyTab() {
 //    var currentWeekStart by remember { mutableStateOf(LocalDate.now().with(DayOfWeek.MONDAY)) }
