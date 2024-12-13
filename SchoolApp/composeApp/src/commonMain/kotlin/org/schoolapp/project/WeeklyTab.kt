@@ -94,7 +94,8 @@ fun WeeklyTab() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF5F9EA0))
+            //.background(Color(0xFF5F9EA0))
+            .background(Color(0xFFFFFFFF))
             .padding(16.dp)
     ) {
         //Spacer(modifier = Modifier.height(8.dp))
