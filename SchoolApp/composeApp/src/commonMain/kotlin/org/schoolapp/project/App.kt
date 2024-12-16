@@ -538,7 +538,6 @@ data class Professor(
     val name: String,
     val courseCount: Int,
     val image: Int,
-    val rating: Int,
     val email: String,    // Ajout de l'email
     val trigram: String,  // Ajout du trigramme
     val course: String    // Ajout du cours que le professeur enseigne
@@ -551,11 +550,11 @@ fun ProfessorsScreen(
     onNavigateToProfessorDetails: (Professor) -> Unit // Ajoutez cette fonction pour la navigation
 ) {
     val professors = listOf(
-        Professor("Mme Dupont", 3, R.drawable.okok, 4, "mme.dupont@mail.com", "DUP", "Data Science"),
-        Professor("M. Martin", 5, R.drawable.okok, 5, "m.martin@mail.com", "MAR", "History"),
-        Professor("Mme Durand", 4, R.drawable.okok, 3, "mme.durand@mail.com", "DUR", "Science"),
-        Professor("M. Lefevre", 2, R.drawable.okok, 4, "m.lefevre@mail.com", "LEF", "Mathematics"),
-        Professor("Mme Moreau", 6, R.drawable.okok, 5, "mme.moreau@mail.com", "MOR", "Physics")
+        Professor("Mme Dupont", 3, R.drawable.okok,  "mme.dupont@mail.com", "DUP", "Data Science"),
+        Professor("M. Martin", 5, R.drawable.okok, "m.martin@mail.com", "MAR", "History"),
+        Professor("Mme Durand", 4, R.drawable.okok,  "mme.durand@mail.com", "DUR", "Science"),
+        Professor("M. Lefevre", 2, R.drawable.okok,  "m.lefevre@mail.com", "LEF", "Mathematics"),
+        Professor("Mme Moreau", 6, R.drawable.okok,  "mme.moreau@mail.com", "MOR", "Physics")
     )
 
     Scaffold(
@@ -639,7 +638,6 @@ fun ProfessorItem(professor: Professor, onClick: () -> Unit) {
                 text = "Courses: ${professor.courseCount}",
                 style = MaterialTheme.typography.body2
             )
-            RatingBar(rating = professor.rating)
         }
 
         IconButton(onClick = { onClick() }) {
@@ -718,14 +716,6 @@ fun ProfessorDetailsScreen(professor: Professor, onNavigateBack: () -> Unit) {
                         Text(text = professor.course)
 
                         Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Rating: ",
-                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
-                        )
-                        RatingBar(rating = professor.rating)
-
-                        Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
                             onClick = { /* Contact professor logic */ },
