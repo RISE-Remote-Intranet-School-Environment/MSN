@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.painter.Painter
 fun App() {
     var currentScreen by remember { mutableStateOf("Home") }
     var enrolledCourses by remember { mutableStateOf(mutableListOf<String>()) } // Liste des cours inscrits
+    var selectedCourse by remember { mutableStateOf<String?>(null) }
+
     var selectedProfessor by remember { mutableStateOf<Professor?>(null) }
 
     // Fonction de désinscription
@@ -91,9 +93,28 @@ fun App() {
                         MyCoursesScreen(
                             enrolledCourses = enrolledCourses,
                             onNavigateBack = { currentScreen = "Classes" },
-                            onUnenroll = onUnenroll // Passer la fonction de désinscription
+                            onUnenroll = onUnenroll,
+                            onAccessDetails = { course ->
+                                selectedCourse = course
+                                currentScreen = "CourseDetails"
+                            }
                         )
                     }
+                    "CourseDetails" -> {
+                        selectedCourse?.let { courseName ->
+                            CourseDetailsPage(
+                                courseName = courseName,
+                                onNavigateBack = { currentScreen = "MyCourses" }
+                            )
+                        }
+                    }
+                    "Classes" -> ClassesView(
+                        onNavigateBack = { currentScreen = "Home" },
+                        onNavigateToProfessors = { currentScreen = "Professors" },
+                        onNavigateToMyCourses = { currentScreen = "MyCourses" },
+                        enrolledCourses = enrolledCourses,
+                        onEnroll = onEnroll
+                    )
                 }
             }
         )
@@ -323,7 +344,12 @@ fun EnrolledCoursesList(enrolledCourses: List<String>) {
 }
 
 @Composable
-fun MyCoursesScreen(enrolledCourses: List<String>, onNavigateBack: () -> Unit, onUnenroll: (String) -> Unit) {
+fun MyCoursesScreen(
+    enrolledCourses: List<String>,
+    onNavigateBack: () -> Unit,
+    onUnenroll: (String) -> Unit,
+    onAccessDetails: (String) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -357,7 +383,8 @@ fun MyCoursesScreen(enrolledCourses: List<String>, onNavigateBack: () -> Unit, o
                         items(enrolledCourses) { course ->
                             CourseItem(
                                 courseName = course,
-                                onUnenroll = { onUnenroll(course) } // Passer la fonction de désinscription
+                                onUnenroll = { onUnenroll(course) },
+                                onAccessDetails = { onAccessDetails(course) }
                             )
                         }
                     }
@@ -369,7 +396,7 @@ fun MyCoursesScreen(enrolledCourses: List<String>, onNavigateBack: () -> Unit, o
 
 
 @Composable
-fun CourseItem(courseName: String, onUnenroll: () -> Unit) {
+fun CourseItem(courseName: String, onUnenroll: () -> Unit, onAccessDetails: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -388,12 +415,21 @@ fun CourseItem(courseName: String, onUnenroll: () -> Unit) {
                 text = courseName,
                 style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.SemiBold)
             )
-            IconButton(onClick = onUnenroll) {
-                Icon(
-                    imageVector = Icons.Default.Delete, // Icône Delete pour désinscription
-                    contentDescription = "Unenroll from $courseName",
-                    tint = Color.Red
-                )
+            Row {
+                IconButton(onClick = onAccessDetails) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = "Access details of $courseName",
+                        tint = MaterialTheme.colors.primary
+                    )
+                }
+                IconButton(onClick = onUnenroll) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Unenroll from $courseName",
+                        tint = Color.Red
+                    )
+                }
             }
         }
     }
@@ -703,6 +739,78 @@ fun ProfessorDetailsScreen(professor: Professor, onNavigateBack: () -> Unit) {
         }
     )
 }
+
+@Composable
+fun CourseDetailsPage(courseName: String, onNavigateBack: () -> Unit) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Details", "Files")
+
+    Scaffold(
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = { Text("Course: $courseName") },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back to My Courses"
+                            )
+                        }
+                    }
+                )
+                TabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(title) }
+                        )
+                    }
+                }
+            }
+        },
+        content = {
+            when (selectedTab) {
+                0 -> CourseDetailsTab(courseName)
+                1 -> CourseFilesTab(courseName)
+            }
+        }
+    )
+}
+
+@Composable
+fun CourseDetailsTab(courseName: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Course Details for $courseName",
+            style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Here are the details about the course.")
+    }
+}
+
+@Composable
+fun CourseFilesTab(courseName: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Files for $courseName",
+            style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Here are the files related to the course.")
+    }
+}
+
 
 @Composable
 fun ClassItem(courseName: String, teacherName: String, isRegistered: Boolean, onEnroll: () -> Unit) {
