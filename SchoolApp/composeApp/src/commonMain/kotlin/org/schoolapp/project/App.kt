@@ -1,6 +1,10 @@
 package org.schoolapp.project
 
 //import DocsTab
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material.icons.filled.Delete
+
+
 import RecentgradesTab
 import ReportTab
 import androidx.compose.material.*
@@ -34,6 +38,21 @@ import androidx.compose.ui.graphics.painter.Painter
 @Composable
 fun App() {
     var currentScreen by remember { mutableStateOf("Home") }
+    var enrolledCourses by remember { mutableStateOf(mutableListOf<String>()) } // Liste des cours inscrits
+    var selectedProfessor by remember { mutableStateOf<Professor?>(null) }
+
+    // Fonction de désinscription
+    val onUnenroll: (String) -> Unit = { course ->
+        enrolledCourses = enrolledCourses.filter { it != course }.toMutableList() // Mise à jour de l'état
+    }
+
+    // Fonction pour gérer l'inscription d'un cours
+    val onEnroll: (String) -> Unit = { course ->
+        // Ajouter le cours à la liste si ce n'est pas déjà inscrit
+        if (!enrolledCourses.contains(course)) {
+            enrolledCourses.add(course)
+        }
+    }
 
     MaterialTheme {
         Scaffold(
@@ -46,8 +65,35 @@ fun App() {
                     "Collaboration" -> CollaborationView(onNavigateBack = { currentScreen = "Home" })
                     "Calendar" -> CalendarView(onNavigateBack = { currentScreen = "Home" })
                     "Grades" -> GradesView(onNavigateBack = { currentScreen = "Home" })
-                    "Classes" -> ClassesView(onNavigateBack = { currentScreen = "Home" }, onNavigateToProfessors = { currentScreen = "Professors" })
-                    "Professors" -> ProfessorsScreen(onNavigateBack = { currentScreen = "Classes" })
+                    "Classes" -> ClassesView(
+                        onNavigateBack = { currentScreen = "Home" },
+                        onNavigateToProfessors = { currentScreen = "Professors" },
+                        onNavigateToMyCourses = { currentScreen = "MyCourses" },
+                        enrolledCourses = enrolledCourses,
+                        onEnroll = onEnroll // Passer la fonction d'inscription
+                    )
+                    "Professors" -> ProfessorsScreen(
+                        onNavigateBack = { currentScreen = "Classes" },
+                        onNavigateToProfessorDetails = { professor ->
+                            selectedProfessor = professor
+                            currentScreen = "ProfessorDetails"
+                        }
+                    )
+                    "ProfessorDetails" -> {
+                        selectedProfessor?.let {
+                            ProfessorDetailsScreen(
+                                professor = it,
+                                onNavigateBack = { currentScreen = "Professors" }
+                            )
+                        }
+                    }
+                    "MyCourses" -> {
+                        MyCoursesScreen(
+                            enrolledCourses = enrolledCourses,
+                            onNavigateBack = { currentScreen = "Classes" },
+                            onUnenroll = onUnenroll // Passer la fonction de désinscription
+                        )
+                    }
                 }
             }
         )
@@ -263,11 +309,109 @@ fun GradesView(onNavigateBack: () -> Unit) {
     )
 }
 
+@Composable
+fun EnrolledCoursesList(enrolledCourses: List<String>) {
+    LazyColumn {
+        items(enrolledCourses) { course ->
+            Text(
+                text = "Enrolled course: $course",
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }
+}
 
 @Composable
-fun ClassesView(onNavigateBack: () -> Unit, onNavigateToProfessors: () -> Unit) {
+fun MyCoursesScreen(enrolledCourses: List<String>, onNavigateBack: () -> Unit, onUnenroll: (String) -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My Courses") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back to Classes"
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Your Enrolled Courses:",
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                if (enrolledCourses.isEmpty()) {
+                    Text("You are not enrolled in any courses yet.", style = MaterialTheme.typography.body1)
+                } else {
+                    LazyColumn {
+                        items(enrolledCourses) { course ->
+                            CourseItem(
+                                courseName = course,
+                                onUnenroll = { onUnenroll(course) } // Passer la fonction de désinscription
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+
+@Composable
+fun CourseItem(courseName: String, onUnenroll: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        elevation = 4.dp,
+        backgroundColor = MaterialTheme.colors.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = courseName,
+                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.SemiBold)
+            )
+            IconButton(onClick = onUnenroll) {
+                Icon(
+                    imageVector = Icons.Default.Delete, // Icône Delete pour désinscription
+                    contentDescription = "Unenroll from $courseName",
+                    tint = Color.Red
+                )
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun ClassesView(
+    onNavigateBack: () -> Unit,
+    onNavigateToProfessors: () -> Unit,
+    onNavigateToMyCourses: () -> Unit,
+    enrolledCourses: MutableList<String>,
+    onEnroll: (String) -> Unit // Ajouter onEnroll comme paramètre
+) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var filteredCourses by remember { mutableStateOf(listOf("Data Science", "History", "Science")) }
+    var buttonStates by remember { mutableStateOf(mutableMapOf<String, Boolean>()) } // Etat des boutons pour chaque cours
 
     Scaffold(
         topBar = {
@@ -314,7 +458,17 @@ fun ClassesView(onNavigateBack: () -> Unit, onNavigateToProfessors: () -> Unit) 
                 )
 
                 filteredCourses.forEach { course ->
-                    ClassItem(courseName = course, teacherName = "Teacher Name")
+                    ClassItem(
+                        courseName = course,
+                        teacherName = "Teacher Name",
+                        isRegistered = buttonStates[course] ?: false, // Etat du bouton pour chaque cours
+                        onEnroll = {
+                            if (!enrolledCourses.contains(course)) {
+                                enrolledCourses.add(course) // Ajouter si non présent
+                                buttonStates[course] = true
+                            }
+                        }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -325,21 +479,47 @@ fun ClassesView(onNavigateBack: () -> Unit, onNavigateToProfessors: () -> Unit) 
                 ) {
                     Text("See the professors")
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onNavigateToMyCourses,
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("See my courses")
+                }
             }
         }
     )
 }
 
-data class Professor(val name: String, val courseCount: Int, val image: Int, val rating: Int)
+
+
+
+
+
+data class Professor(
+    val name: String,
+    val courseCount: Int,
+    val image: Int,
+    val rating: Int,
+    val email: String,    // Ajout de l'email
+    val trigram: String,  // Ajout du trigramme
+    val course: String    // Ajout du cours que le professeur enseigne
+)
+
 
 @Composable
-fun ProfessorsScreen(onNavigateBack: () -> Unit) {
+fun ProfessorsScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToProfessorDetails: (Professor) -> Unit // Ajoutez cette fonction pour la navigation
+) {
     val professors = listOf(
-        Professor("Mme Dupont", 3, R.drawable.okok, 4),
-        Professor("M. Martin", 5, R.drawable.okok, 5),
-        Professor("Mme Durand", 4, R.drawable.okok, 3),
-        Professor("M. Lefevre", 2, R.drawable.okok, 4),
-        Professor("Mme Moreau", 6, R.drawable.okok, 5)
+        Professor("Mme Dupont", 3, R.drawable.okok, 4, "mme.dupont@mail.com", "DUP", "Data Science"),
+        Professor("M. Martin", 5, R.drawable.okok, 5, "m.martin@mail.com", "MAR", "History"),
+        Professor("Mme Durand", 4, R.drawable.okok, 3, "mme.durand@mail.com", "DUR", "Science"),
+        Professor("M. Lefevre", 2, R.drawable.okok, 4, "m.lefevre@mail.com", "LEF", "Mathematics"),
+        Professor("Mme Moreau", 6, R.drawable.okok, 5, "mme.moreau@mail.com", "MOR", "Physics")
     )
 
     Scaffold(
@@ -368,30 +548,39 @@ fun ProfessorsScreen(onNavigateBack: () -> Unit) {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                ProfessorList(professors = professors)
+                ProfessorList(
+                    professors = professors,
+                    onNavigateToProfessorDetails = onNavigateToProfessorDetails // Passer la fonction de navigation ici
+                )
             }
         }
     )
 }
 
+
 @Composable
-fun ProfessorList(professors: List<Professor>) {
+fun ProfessorList(
+    professors: List<Professor>,
+    onNavigateToProfessorDetails: (Professor) -> Unit // Passer cette fonction pour la navigation
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
         items(professors) { professor ->
-            ProfessorItem(professor = professor)
+            ProfessorItem(professor = professor, onClick = { onNavigateToProfessorDetails(professor) }) // Passer le professeur à la fonction de navigation
         }
     }
 }
 
+
 @Composable
-fun ProfessorItem(professor: Professor) {
+fun ProfessorItem(professor: Professor, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .height(80.dp),
+            .height(80.dp)
+            .clickable { onClick() }, // Lorsque vous cliquez sur un professeur, il appelle la fonction de navigation
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -414,10 +603,10 @@ fun ProfessorItem(professor: Professor) {
                 text = "Courses: ${professor.courseCount}",
                 style = MaterialTheme.typography.body2
             )
-            RatingBar2(rating = professor.rating)
+            RatingBar(rating = professor.rating)
         }
 
-        IconButton(onClick = { }) {
+        IconButton(onClick = { onClick() }) {
             Icon(
                 imageVector = Icons.Default.ArrowForward,
                 contentDescription = "More details"
@@ -427,7 +616,96 @@ fun ProfessorItem(professor: Professor) {
 }
 
 @Composable
-fun ClassItem(courseName: String, teacherName: String) {
+fun ProfessorDetailsScreen(professor: Professor, onNavigateBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(professor.name) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back to Professors"
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Professor Details",
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 4.dp,
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Name: ",
+                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(text = professor.name)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Email: ",
+                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(text = professor.email)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Trigram: ",
+                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(text = professor.trigram)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Course: ",
+                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(text = professor.course)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Rating: ",
+                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                        )
+                        RatingBar(rating = professor.rating)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { /* Contact professor logic */ },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Contact Professor")
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun ClassItem(courseName: String, teacherName: String, isRegistered: Boolean, onEnroll: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -449,11 +727,23 @@ fun ClassItem(courseName: String, teacherName: String) {
                 Text(text = teacherName, style = MaterialTheme.typography.body2)
             }
         }
-        IconButton(onClick = { /* Show course details */ }) {
-            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Course details")
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { /* Show course details */ }) {
+                Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Course details")
+            }
+            Button(
+                onClick = { onEnroll() }, // Action d'inscription
+                modifier = Modifier.padding(start = 16.dp)
+            ) {
+                Text(if (isRegistered) "Registered" else "Register")
+            }
         }
     }
 }
+
+
 
 @Composable
 fun RatingBar(rating: Int) {
@@ -472,5 +762,3 @@ fun RatingBar(rating: Int) {
         }
     }
 }
-
-
