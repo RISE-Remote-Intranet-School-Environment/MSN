@@ -22,3 +22,10 @@ Classes is the page where you can enter which courses you are taking. You'll hav
 
 ## Collaboration
 Collaboration is a page where you will have different options : Forum, Sales, Docs and Private Lessons. Forum is a place where you can ask question to anyone. Sales is a place to sell/buy student’s material from previous years. Docs is where you can share or find synthesis and any other docs from previous years. Private lessons is where you can search for tutors.   
+
+![Forum](chemin/vers/image) ![Sales](chemin/vers/image) ![Docs](chemin/vers/image) ![Private Lessons](chemin/vers/image)
+
+## Grades
+Grades is the page where you will see your grades and every details of your evaluation. There would be a tool that helps you to calculate your average score and the score that you have to do if you want to pass a course. 
+
+![Ressent Grades](chemin/vers/image) ![Simulation](chemin/vers/image) ![Report Card](chemin/vers/image)
