@@ -8,7 +8,7 @@ Any devices on Android, IOS, Windows or MacOS
 # How to run
 Start the app. When we are on the first page you have the choice between four pages : Calendar, Classes, Collaboration and Grades.
 
-![Home Page](C:\MSN\Screenshot\homePage.png)
+![Home Page](Screenshot\homePage.png)
 
 ## Calendar 
 Calendar is where you can see your planning. You have different view : monthly, weekly or daily. You also have access to a to do list. There is a floating button that lets you enter a new event in your calendar or in your to do.
