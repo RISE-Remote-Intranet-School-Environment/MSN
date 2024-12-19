@@ -1,6 +1,44 @@
 # Global Architecture
+This project is a cross-platform school application based on Kotlin Multiplatform, enabling code sharing between Android, iOS, Web, and Desktop. The application is designed with the following principles:
+
+- **Cross-platform**: Common code is written in Kotlin, with platform-specific implementations when necessary.
+- **Modularity**: Use of modules to better organize code and ensure reusability.
+
+## Software Architecture
+We have one file for each page of the application.
+
+The architecture follows a modular and maintainable approach.
+### 1. **Cross-Platform Modules**
+   - **Core Module**: Contains the application logic shared across all platforms, including data models, networking, and resource management.
+   - **Platform-Specific Modules**: Provide necessary implementations for each platform (Android, iOS, etc.), such as interactions with native APIs.
+   - **Shared UI Module**: Includes cross-platform UI components built with JetBrains Compose.
+
+### 2. **Separation of Concerns**
+   - Each module has a clear responsibility to ensure maintainability.
+   - Dependencies are injected via frameworks like Koin or Hilt.
+
+## ViewModel
+The project appears to follow the MVVM architecture, but we didn't take care of the database part. 
+
+So we haven't any "model".
+
+## UI with Compose
+The project uses JetBrains Compose, a UI framework inspired by Jetpack Compose.
 
 # Dependencies
+Here are the main plugins and libraries used:
+
+- **Gradle Plugins**:
+  - `androidApplication`
+  - `androidLibrary`
+  - `jetbrainsCompose`
+  - `kotlinMultiplatform`
+
+- **Libraries**:
+  - JetBrains Compose for UI.
+  - Kotlinx Serialization for data serialization.
+  - Ktor for network calls.
+  - SQLDelight for local database management.
 
 # Supported Target
 Any devices on Android, IOS, Windows or MacOS
