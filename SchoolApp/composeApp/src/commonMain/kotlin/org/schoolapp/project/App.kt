@@ -3,8 +3,11 @@ package org.schoolapp.project
 //import DocsTab
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Send
 
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Description
 import RecentgradesTab
 import ReportTab
 import androidx.compose.material.*
@@ -133,12 +136,12 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             HomeSection(
-                icon = painterResource(id = R.drawable.calendar), // Remplacez par vos images
+                icon = painterResource(id = R.drawable.calendar),
                 label = "Calendar",
                 onClick = { onNavigate("Calendar") }
             )
             HomeSection(
-                icon = painterResource(id = R.drawable.klass), // Remplacez par vos images
+                icon = painterResource(id = R.drawable.klass),
                 label = "Classes",
                 onClick = { onNavigate("Classes") }
             )
@@ -148,12 +151,12 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             HomeSection(
-                icon = painterResource(id = R.drawable.collaboration), // Remplacez par vos images
+                icon = painterResource(id = R.drawable.collaboration),
                 label = "Collaboration",
                 onClick = { onNavigate("Collaboration") }
             )
             HomeSection(
-                icon = painterResource(id = R.drawable.grades), // Remplacez par vos images
+                icon = painterResource(id = R.drawable.grades),
                 label = "Grades",
                 onClick = { onNavigate("Grades") }
             )
@@ -443,11 +446,12 @@ fun ClassesView(
     onNavigateToProfessors: () -> Unit,
     onNavigateToMyCourses: () -> Unit,
     enrolledCourses: MutableList<String>,
-    onEnroll: (String) -> Unit // Ajouter onEnroll comme paramètre
+    onEnroll: (String) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-    var filteredCourses by remember { mutableStateOf(listOf("Data Science", "History", "Science")) }
-    var buttonStates by remember { mutableStateOf(mutableMapOf<String, Boolean>()) } // Etat des boutons pour chaque cours
+    val availableCourses = listOf("Data Science", "History", "Science")
+    val filteredCourses = availableCourses.filter { it.contains(searchQuery.text, ignoreCase = true) }
+    val buttonStates = remember { mutableStateMapOf<String, Boolean>() } // Utiliser mutableStateMapOf
 
     Scaffold(
         topBar = {
@@ -471,25 +475,12 @@ fun ClassesView(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                Text(
-                    text = "Available courses:",
-                    style = MaterialTheme.typography.h6,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
                 TextField(
                     value = searchQuery,
-                    onValueChange = {
-                        searchQuery = it
-                        filteredCourses = listOf("Data Science", "History", "Science").filter {
-                            it.contains(searchQuery.text, ignoreCase = true)
-                        }
-                    },
+                    onValueChange = { searchQuery = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .border(1.dp, MaterialTheme.colors.primary)
-                        .padding(8.dp),
+                        .padding(bottom = 16.dp),
                     label = { Text("Search courses") }
                 )
 
@@ -497,12 +488,11 @@ fun ClassesView(
                     ClassItem(
                         courseName = course,
                         teacherName = "Teacher Name",
-                        isRegistered = buttonStates[course] ?: false, // Etat du bouton pour chaque cours
+                        isRegistered = buttonStates[course] ?: false,
                         onEnroll = {
-                            if (!enrolledCourses.contains(course)) {
-                                enrolledCourses.add(course) // Ajouter si non présent
-                                buttonStates[course] = true
-                            }
+                            // Mettre à jour l'état lorsque le bouton est cliqué
+                            buttonStates[course] = true
+                            onEnroll(course)
                         }
                     )
                 }
@@ -534,6 +524,7 @@ fun ClassesView(
 
 
 
+
 data class Professor(
     val name: String,
     val courseCount: Int,
@@ -547,7 +538,7 @@ data class Professor(
 @Composable
 fun ProfessorsScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToProfessorDetails: (Professor) -> Unit // Ajoutez cette fonction pour la navigation
+    onNavigateToProfessorDetails: (Professor) -> Unit
 ) {
     val professors = listOf(
         Professor("Mme Dupont", 3, R.drawable.okok,  "mme.dupont@mail.com", "DUP", "Data Science"),
@@ -585,7 +576,7 @@ fun ProfessorsScreen(
 
                 ProfessorList(
                     professors = professors,
-                    onNavigateToProfessorDetails = onNavigateToProfessorDetails // Passer la fonction de navigation ici
+                    onNavigateToProfessorDetails = onNavigateToProfessorDetails
                 )
             }
         }
@@ -596,13 +587,13 @@ fun ProfessorsScreen(
 @Composable
 fun ProfessorList(
     professors: List<Professor>,
-    onNavigateToProfessorDetails: (Professor) -> Unit // Passer cette fonction pour la navigation
+    onNavigateToProfessorDetails: (Professor) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
         items(professors) { professor ->
-            ProfessorItem(professor = professor, onClick = { onNavigateToProfessorDetails(professor) }) // Passer le professeur à la fonction de navigation
+            ProfessorItem(professor = professor, onClick = { onNavigateToProfessorDetails(professor) })
         }
     }
 }
@@ -615,7 +606,7 @@ fun ProfessorItem(professor: Professor, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(8.dp)
             .height(80.dp)
-            .clickable { onClick() }, // Lorsque vous cliquez sur un professeur, il appelle la fonction de navigation
+            .clickable { onClick() },
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -651,84 +642,83 @@ fun ProfessorItem(professor: Professor, onClick: () -> Unit) {
 
 @Composable
 fun ProfessorDetailsScreen(professor: Professor, onNavigateBack: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(professor.name) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back to Professors"
-                        )
+    var showConversation by remember { mutableStateOf(false) }
+
+    if (showConversation) {
+        ConversationScreen(professor = professor, onNavigateBack = { showConversation = false })
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(professor.name) },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back to Professors"
+                            )
+                        }
                     }
-                }
-            )
-        },
-        content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Professor Details",
-                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(bottom = 16.dp)
                 )
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 4.dp,
-                    shape = MaterialTheme.shapes.medium
+            },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    Text(
+                        text = "Professor Details",
+                        style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = 4.dp,
+                        shape = MaterialTheme.shapes.medium
                     ) {
-                        Text(
-                            text = "Name: ",
-                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(text = professor.name)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Email: ",
-                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(text = professor.email)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Trigram: ",
-                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(text = professor.trigram)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Course: ",
-                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(text = professor.course)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Button(
-                            onClick = { /* Contact professor logic */ },
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Text("Contact Professor")
+                            Text(
+                                text = "Name: ",
+                                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(text = professor.name)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "Email: ",
+                                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(text = professor.email)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "Course: ",
+                                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(text = professor.course)
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = { showConversation = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Contact Professor")
+                            }
                         }
                     }
                 }
             }
-        }
-    )
+        )
+    }
 }
+
 
 @Composable
 fun CourseDetailsPage(courseName: String, onNavigateBack: () -> Unit) {
@@ -769,24 +759,28 @@ fun CourseDetailsPage(courseName: String, onNavigateBack: () -> Unit) {
     )
 }
 
-@Composable
-fun CourseDetailsTab(courseName: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Course Details for $courseName",
-            style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Here are the details about the course.")
-    }
-}
+val courseFiles = mapOf(
+    "Data Science" to listOf(
+        "Introduction_to_Data_Science.pdf",
+        "Machine_Learning_Basics.pptx",
+        "Python_for_Data_Analysis.docx"
+    ),
+    "History" to listOf(
+        "Ancient_Civilizations.pdf",
+        "World_War_II_Overview.pptx",
+        "Modern_History_Notes.docx"
+    ),
+    "Science" to listOf(
+        "Basic_Physics_Concepts.pdf",
+        "Introduction_to_Biology.pptx",
+        "Chemistry_Experiments.docx"
+    )
+)
 
 @Composable
 fun CourseFilesTab(courseName: String) {
+    val files = courseFiles[courseName] ?: listOf("No files available for this course.")
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -796,10 +790,46 @@ fun CourseFilesTab(courseName: String) {
             text = "Files for $courseName",
             style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Here are the files related to the course.")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn {
+            items(files) { fileName ->
+                FileItem(fileName)
+            }
+        }
     }
 }
+
+@Composable
+fun FileItem(fileName: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        elevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Description,
+                contentDescription = "File Icon",
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colors.primary
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = fileName,
+                style = MaterialTheme.typography.body1
+            )
+        }
+    }
+}
+
+
 
 
 @Composable
@@ -825,21 +855,15 @@ fun ClassItem(courseName: String, teacherName: String, isRegistered: Boolean, on
                 Text(text = teacherName, style = MaterialTheme.typography.body2)
             }
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Button(
+            onClick = onEnroll,
+            modifier = Modifier.padding(start = 16.dp)
         ) {
-            IconButton(onClick = { /* Show course details */ }) {
-                Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Course details")
-            }
-            Button(
-                onClick = { onEnroll() }, // Action d'inscription
-                modifier = Modifier.padding(start = 16.dp)
-            ) {
-                Text(if (isRegistered) "Registered" else "Register")
-            }
+            Text(if (isRegistered) "Registered" else "Register")
         }
     }
 }
+
 
 
 
@@ -860,3 +884,169 @@ fun RatingBar(rating: Int) {
         }
     }
 }
+
+
+val courseDetails = mapOf(
+    "Data Science" to """
+        This course provides an extensive overview of data analysis, machine learning, and visualization techniques. 
+        You will learn to work with tools such as Python, R, and SQL to manipulate and analyze large datasets.
+        The course also includes topics like data wrangling, predictive modeling, and statistical inference.
+        By the end, you will complete a capstone project to apply these concepts in real-world scenarios.
+    """.trimIndent(),
+    "History" to """
+        Dive into the fascinating world of history with this comprehensive course. 
+        Explore key historical events, such as the Industrial Revolution, the World Wars, and the rise and fall of civilizations. 
+        We also focus on historical methodology, helping you understand how historians analyze sources and construct narratives.
+        This course includes group discussions, document analysis, and essays to refine your critical thinking skills.
+    """.trimIndent(),
+    "Science" to """
+        This foundational course explores core concepts in physics, chemistry, and biology. 
+        You will conduct experiments to understand laws like Newton's mechanics, chemical reactions, and the process of photosynthesis.
+        Additionally, we cover contemporary topics like climate change, genetic engineering, and renewable energy.
+        The course encourages hands-on learning and includes lab sessions to deepen your understanding.
+    """.trimIndent()
+)
+
+
+@Composable
+fun CourseDetailsTab(courseName: String) {
+    val details = courseDetails[courseName] ?: "Details for this course are not available."
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Course Details for $courseName",
+            style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Overview:",
+            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = details,
+            style = MaterialTheme.typography.body1,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "What You Will Learn:",
+            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "1. Key topics in ${courseName.lowercase()}.\n2. Hands-on projects.\n3. Critical thinking and analysis skills.",
+            style = MaterialTheme.typography.body1,
+            lineHeight = 22.sp
+        )
+    }
+}
+
+@Composable
+fun ConversationScreen(
+    professor: Professor,
+    onNavigateBack: () -> Unit
+) {
+    // Liste des messages simulés
+    val messages = listOf(
+        "Hello, Professor ${professor.name}. I have a question about the ${professor.course} course.",
+        "Sure, what is your question?",
+        "I’m struggling with the last assignment. Could you provide some clarification?",
+        "Of course! Let me explain it step by step."
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Chat with ${professor.name}") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(messages) { message ->
+                        ChatBubble(message = message, isUser = messages.indexOf(message) % 2 == 0)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                MessageInputBox()
+            }
+        }
+    )
+}
+
+@Composable
+fun ChatBubble(message: String, isUser: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+    ) {
+        Card(
+            backgroundColor = if (isUser) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+            modifier = Modifier
+                .widthIn(max = 250.dp)
+        ) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.body1,
+                color = if (isUser) Color.White else Color.Black,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun MessageInputBox() {
+    var text by remember { mutableStateOf("") }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextField(
+            value = text,
+            onValueChange = { text = it },
+            modifier = Modifier.weight(1f),
+            placeholder = { Text("Type a message...") }
+        )
+        IconButton(onClick = {
+            // Logique pour envoyer un message (ici on peut juste réinitialiser le texte pour simuler l'envoi)
+            text = ""
+        }) {
+            Icon(
+                imageVector = Icons.Default.Send,
+                contentDescription = "Send Message",
+                tint = MaterialTheme.colors.primary
+            )
+        }
+    }
+}
+
+
+
