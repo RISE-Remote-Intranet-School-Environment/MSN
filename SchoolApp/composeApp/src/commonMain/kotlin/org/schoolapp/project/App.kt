@@ -1066,5 +1066,3 @@ fun MessageInputBox() {
 
 
 
-
-//Tu preferes moi ou ton pere ?
