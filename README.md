@@ -19,8 +19,7 @@ The architecture follows a modular and maintainable approach.
 
 ## ViewModel
 The project appears to follow the MVVM architecture, but we didn't take care of the database part. 
-
-So we haven't any "model".
+We mainly have the View part.
 
 ## UI with Compose
 The project uses JetBrains Compose, a UI framework inspired by Jetpack Compose.
