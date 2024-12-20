@@ -44,7 +44,12 @@ Here are the main plugins and libraries used:
 Any devices on Android, IOS, Windows or MacOS
 
 # How to run
-Start the app. When we are on the first page you have the choice between four pages : Calendar, Classes, Collaboration and Grades.
+1. Clone the repository.
+2. Set up the environment with Android Studio.
+3. Synchronize Gradle dependencies.
+4. Run the application on an emulator or physical device.
+
+When you are on the first page you have the choice between four pages : Calendar, Classes, Collaboration and Grades.
 
 ![Home Page](Screenshot/homePage.png)
 
