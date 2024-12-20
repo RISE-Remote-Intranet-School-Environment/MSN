@@ -49,7 +49,7 @@ Start the app. When we are on the first page you have the choice between four pa
 ![Home Page](Screenshot/homePage.png)
 
 ## Calendar 
-Calendar is where you can see your planning. You have different view : monthly, weekly or daily. You also have access to a to do list. There is a floating button that lets you enter a new event in your calendar or in your to do.
+Calendar is where you can see your planning. You have different view : monthly, weekly or daily. You can add en event by clicking on the date of the day and you also have access to a to do list via the floating button.
 
 ![Weekly](Screenshot/weekly.png) ![Events](Screenshot/Events.png) ![Add Event](Screenshot/Add_event.png) ![To Do List](Screenshot/To_do.png)
 
