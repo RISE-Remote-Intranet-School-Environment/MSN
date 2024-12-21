@@ -54,6 +54,7 @@ When you are on the first page you have the choice between four pages : Calendar
 
 ## Calendar 
 Calendar is where you can see your planning. You have different view : monthly, weekly or daily. You can add en event by clicking on the date of the day and you also have access to a to do list via the floating button.
+Warning : the delete button of the to do list do not appaers, if you click on the right side of the task this will delete the task.
 
 ![Weekly](Screenshot/weekly.png) ![Events](Screenshot/Events.png) ![Add Event](Screenshot/Add_event.png) ![To Do List](Screenshot/To_do.png)
 
