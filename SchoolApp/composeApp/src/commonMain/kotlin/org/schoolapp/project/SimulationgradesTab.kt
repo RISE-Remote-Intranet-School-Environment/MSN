@@ -9,9 +9,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Delete
 
 @Composable
 fun SimulationgradesTab() {
@@ -31,12 +32,6 @@ fun SimulationgradesTab() {
     var expanded by remember { mutableStateOf(false) }
 
     val gradesList = remember { mutableStateListOf<GradeItem>() }
-    val exampleGrades = listOf(
-        Grade("PHY", "Labo 2 : Optic", 20, 14, 20),
-        Grade("CHE", "Report Oxydo-reduction", 35, 8, 10),
-        Grade("LAW", "Essay Constitution", 60, 10, 30),
-        Grade("THE", "Exercices : Bernouilli", 5, 4, 15)
-    )
 
     Column(
         modifier = Modifier
@@ -316,111 +311,101 @@ fun loadGrade(gradesList: MutableList<GradeItem>, grade: Grade) {
         GradeItem(grade.assessment, "${grade.ratio}%", grade.score.toString(), grade.total.toString())
     )
 }
-
-fun validateInputs(grade: String, ratio: String, score: String, total: String): String {
-    if (grade.isBlank()) return "Subject name should be completed"
-    if (ratio.isBlank()) return "Ratio should be completed"
-    if (score.isBlank()) return "Score should be completed"
-    if (total.isBlank()) return "Total should be completed"
-
-    val ratioValue = ratio.toIntOrNull()
-    if (ratioValue == null || ratioValue !in 0..100) return "The ratio should be a number between 0 and 100"
-
-    val scoreValue = score.toDoubleOrNull()
-    if (scoreValue == null || scoreValue < 0) return "The score should be a number between 0 and the total"
-
-    val totalValue = total.toDoubleOrNull()
-    if (totalValue == null) return "The total should only be a number"
-    if (scoreValue > totalValue) return "The score should be between 0 and the total"
-
-    return ""
-}
-
-fun calculateRequiredScore(gradesList: List<GradeItem>, newRatio: Double, newMaxScore: Double): String {
-    // Step 1: Normalize existing scores to a total of 100 and multiply by their ratios
-    val totalWeightedScore = gradesList.sumOf { item ->
-        val score = item.score.toDoubleOrNull() ?: 0.0
-        val maxScore = item.maxScore.toDoubleOrNull() ?: 1.0
-        val ratio = item.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0
-        val normalizedScore = (score / maxScore) * 100
-        normalizedScore * (ratio / 100)
+// Fonction de validation des entrées
+fun validateInputs(
+    gradeInput: String,
+    ratioInput: String,
+    scoreInput: String,
+    maxRatioInput: String
+): String {
+    return when {
+        gradeInput.isEmpty() -> "Subject name is required."
+        ratioInput.isEmpty() -> "Ratio is required."
+        scoreInput.isEmpty() -> "Score is required."
+        maxRatioInput.isEmpty() -> "Max ratio is required."
+        ratioInput.toDoubleOrNull() == null -> "Ratio must be a number."
+        scoreInput.toDoubleOrNull() == null -> "Score must be a number."
+        maxRatioInput.toDoubleOrNull() == null -> "Max ratio must be a number."
+        else -> ""
     }
-
-    // Step 2: Calculate the total score needed to achieve an average of 10/20
-    val requiredTotalScore = 50.0
-
-    // Step 3: Calculate the score needed for the new course
-    val remainingScore = requiredTotalScore - totalWeightedScore
-    val requiredScoreOn100 = remainingScore / (newRatio / 100)
-    val requiredScore = requiredScoreOn100 * (newMaxScore / 100)
-
-    // Format the result to 2 decimal places
-    return String.format("%.2f", requiredScore)
 }
 
+// Calcul de la moyenne pondérée
+fun calculateAverageScore(gradesList: List<GradeItem>): Double {
+    val totalScore = gradesList.sumOf { it.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0 * (it.score.toDoubleOrNull() ?: 0.0) }
+    val totalRatio = gradesList.sumOf { it.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0 }
+    return if (totalRatio > 0) totalScore / totalRatio * 20 else 0.0
+}
+
+// Calcul du score nécessaire pour atteindre un objectif
+fun calculateRequiredScore(
+    gradesList: List<GradeItem>,
+    targetRatio: Double,
+    targetMaxRatio: Double
+): String {
+    val totalRatio = gradesList.sumOf { it.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0 }
+    val remainingRatio = 100.0 - totalRatio
+    return if (remainingRatio > 0) {
+        val requiredScore = (targetMaxRatio * remainingRatio) / targetRatio
+        String.format("%.2f", requiredScore)
+    } else {
+        "N/A"
+    }
+}
+
+// Fonction pour générer un bouton de tabulation
 @Composable
 fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            contentColor = Color.White
-        )
+        modifier = Modifier
+            .padding(4.dp)
+            .background(if (isSelected) Color.Gray else Color.LightGray, shape = RoundedCornerShape(8.dp)),
+        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent)
     ) {
-        Text(text = text, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+        Text(
+            text = text,
+            color = if (isSelected) Color.White else Color.Black,
+            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold)
+        )
     }
 }
 
+// Fonction pour afficher une ligne de la liste de grades
 @Composable
 fun GradeRow(item: GradeItem, isDeleteMode: Boolean, onDelete: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = item.name, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text(text = item.ratio, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text(text = item.score, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text(text = item.maxScore, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(
+            text = item.name,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = item.ratio,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = item.score,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = item.maxScore,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.weight(1f)
+        )
         if (isDeleteMode) {
-            Button(
-                onClick = onDelete,
-                colors = ButtonDefaults.buttonColors(Color.Red)
-            ) {
-                Text(text = "Delete", color = Color.White)
+            IconButton(onClick = onDelete) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
             }
         }
     }
 }
 
-fun calculateAverageScore(gradesList: List<GradeItem>): Double {
-    var totalScore = 0.0
-    var totalRatio = 0.0
-
-    for (item in gradesList) {
-        val ratio = item.ratio.removeSuffix("%").toDoubleOrNull() ?: 0.0
-        val score = item.score.toDoubleOrNull() ?: 0.0
-        val maxScore = item.maxScore.toDoubleOrNull() ?: 1.0
-
-        val scoreConverted = (score / maxScore) * 20
-        totalScore += scoreConverted * (ratio / 100)
-        totalRatio += ratio
-    }
-
-    return if (totalRatio > 0) totalScore / (totalRatio / 100) else 0.0
-}
-
-data class GradeItem(
-    val name: String,
-    val ratio: String,
-    val score: String,
-    val maxScore: String
-)
-
-data class Grade(
-    val subject: String,
-    val assessment: String,
-    val ratio: Int,
-    val score: Int,
-    val total: Int
-)

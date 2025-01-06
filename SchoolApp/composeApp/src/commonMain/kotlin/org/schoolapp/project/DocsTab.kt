@@ -1,6 +1,5 @@
 package org.schoolapp.project
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,18 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+
 
 @Composable
 fun DocsTab() {
-    // Filtres principaux
     var selectedDocumentType by remember { mutableStateOf("No Type") }
     var selectedGrade by remember { mutableStateOf("No Grades") }
     var selectedYear by remember { mutableStateOf("No Years") }
     var selectedLesson by remember { mutableStateOf("No Lessons") }
     var showShareDialog by remember { mutableStateOf(false) }
 
-    // Données pour chaque type de document
     val summaries = remember { mutableStateListOf<String>() }
     val solutions = remember { mutableStateListOf<String>() }
     val exams = remember { mutableStateListOf<String>() }
@@ -37,7 +34,6 @@ fun DocsTab() {
         else -> emptyList()
     }
 
-    // Documents filtrés
     val filteredDocuments = currentDocuments.filter { document ->
         (selectedGrade != "No Grades" && document.contains(selectedGrade)) &&
                 (selectedYear != "No Years" && document.contains(selectedYear)) &&
@@ -46,7 +42,6 @@ fun DocsTab() {
 
     Scaffold(
         floatingActionButton = {
-            // Bouton pour partager un document
             FloatingActionButton(
                 onClick = { showShareDialog = true },
                 backgroundColor = MaterialTheme.colors.primary

@@ -17,15 +17,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 @Composable
-fun CollaborationView(onNavigateBack: () -> Unit) {
+fun GradesView(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Forum", "Sales", "Docs", "Private Lessons")
+    val tabs = listOf("Recent Grades", "Simulation", "Report Card")
 
     Scaffold(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("Collaboration") },
+                    title = { Text("Grades") },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(
@@ -49,10 +49,9 @@ fun CollaborationView(onNavigateBack: () -> Unit) {
         },
         content = {
             when (selectedTab) {
-                0 -> ForumTab()
-                1 -> SalesTab()
-                2 -> DocsTab()
-                3 -> PrivateLessonsTab()
+                0 -> RecentgradesTab()
+                1 -> SimulationgradesTab()
+                2 -> ReportTab()
             }
         }
     )

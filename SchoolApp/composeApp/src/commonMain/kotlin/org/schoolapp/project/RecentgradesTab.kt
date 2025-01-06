@@ -1,3 +1,5 @@
+package org.schoolapp.project
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,21 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-data class Grade(
-    val subject: String,
-    val assessment: String,
-    val score: Int,
-    val total: Int
-)
 
 @Composable
 fun RecentgradesTab() {
-    val grades = listOf(
-        Grade("PHY", "Labo 2 : Optic", 14, 20),
-        Grade("CHE", "Report Oxydo-reduction", 8, 10),
-        Grade("LAW", "Essay Constitution", 10, 30),
-        Grade("THE", "Exercices : Bernouilli", 4, 15)
-    )
+
 
     var selectedSubject by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }

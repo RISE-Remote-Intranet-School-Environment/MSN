@@ -1,5 +1,6 @@
 package org.schoolapp.project
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,26 +19,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.AnimatedVisibility
-
-// Data class for Tutor
-data class Tutor(
-    val name: String,
-    val rating: Int,
-    val courses: String,
-    val description: String // Nouveau champ pour la description
-)
 
 @Composable
 fun PrivateLessonsTab() {
-    val tutors = listOf(
-        Tutor("Samir", 4, "Math", "Samir est un professeur expérimenté en Mathématiques, passionné par l'enseignement des concepts complexes de manière simple."),
-        Tutor("Haitam", 5, "Python", "Haitam est un expert en Python avec plus de 10 ans d'expérience en développement et enseignement."),
-        Tutor("Yllke", 4, "Java", "Yllke est une passionnée de Java qui aime partager ses connaissances avec ses étudiants."),
-        Tutor("Timothé", 3, "English", "Timothé est un enseignant dévoué en Anglais, spécialisé dans l'amélioration des compétences orales."),
-        Tutor("Ayoub", 5, "Rust", "Ayoub est un spécialiste de Rust, enthousiaste à l'idée d'enseigner ce langage moderne et performant."),
-        Tutor("Ibrahim", 5, "Linux", "Ibrahim est un habitué de l'environnement Linux impatient de partager son savoir")
-    )
+    // Récupération des tuteurs depuis le repository
+    val tutors = TutorRepository.tutors
 
     // Map des états de visibilité pour chaque tuteur
     val descriptionVisibilityStates = remember { mutableStateOf(tutors.associate { it.name to false }) }
@@ -141,7 +128,7 @@ fun TutorItem(
         // Description text (avec animation)
         AnimatedVisibility(visible = isDescriptionVisible) {
             Text(
-                text = tutor.description, // Utilise la description personnalisée
+                text = tutor.description,
                 style = MaterialTheme.typography.body2.copy(color = Color.DarkGray),
                 modifier = Modifier.padding(start = 64.dp, top = 8.dp)
             )
@@ -150,13 +137,17 @@ fun TutorItem(
 }
 
 @Composable
-fun RatingBar2(rating: Int) {
-    Row {
+fun RatingBar(rating: Int) {
+    Row(
+        modifier = Modifier.padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         repeat(5) { index ->
+            val icon = if (index < rating) Icons.Default.Star else Icons.Default.StarBorder
             Icon(
-                imageVector = Icons.Filled.Star,
+                imageVector = icon,
                 contentDescription = null,
-                tint = if (index < rating) Color.Yellow else Color.LightGray,
+                tint = Color.Yellow,
                 modifier = Modifier.size(16.dp)
             )
         }

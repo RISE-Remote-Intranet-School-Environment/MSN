@@ -554,14 +554,6 @@ fun EventDialog(
         }
     )
 }
-
-//data class Event(
-//    val title: String,
-//    val description: String,
-//    val startTime: String,
-//    val endTime: String,
-//    val color: Color = Color.Gray // Nouvelle propriété pour la couleur
-//)
 data class Event(
     val title: String,
     val description: String,

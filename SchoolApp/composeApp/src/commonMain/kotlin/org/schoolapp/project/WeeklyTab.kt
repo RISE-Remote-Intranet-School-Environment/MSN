@@ -152,103 +152,103 @@ fun WeeklyTab() {
                 )
             }
 
-                //Bouton flottant avec effet pour afficher les options
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.BottomEnd
-                ) {
-                    Column(horizontalAlignment = Alignment.End) {
-                        AnimatedVisibility(
-                            visible = showOptions,
-                            enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
-                                initialOffsetY = { it / 2 }),
-                            exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(
-                                targetOffsetY = { it / 2 })
-                        ) {
-                            Column(horizontalAlignment = Alignment.End) {
-                                FloatingActionButton(
-                                    onClick = { showToDoListDialog = true },
-                                    backgroundColor = Color(0xFFB0C4DE),
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Filled.List,
-                                        contentDescription = "To Do List",
-                                        tint = Color.Black
-                                    )
-                                }
-
-                                FloatingActionButton(
-                                    onClick = { /* Action pour les cours */ },
-                                    backgroundColor = Color(0xFFB0C4DE),
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Filled.School,
-                                        contentDescription = "Courses",
-                                        tint = Color.Black
-                                    )
-                                }
+            //Bouton flottant avec effet pour afficher les options
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedVisibility(
+                        visible = showOptions,
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
+                            initialOffsetY = { it / 2 }),
+                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(
+                            targetOffsetY = { it / 2 })
+                    ) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            FloatingActionButton(
+                                onClick = { showToDoListDialog = true },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(
+                                    Icons.Filled.List,
+                                    contentDescription = "To Do List",
+                                    tint = Color.Black
+                                )
                             }
-                        }
 
-                        FloatingActionButton(
-                            onClick = { showOptions = !showOptions },
-                            backgroundColor = Color(0xFF5F9EA0)
-                        ) {
-                            Icon(
-                                Icons.Filled.Add,
-                                contentDescription = "Options",
-                                tint = Color.White
-                            )
-                        }
-                    }
-                }
-
-                // Dialogues pour To Do List et ajout d'événements
-                if (showToDoListDialog) {
-                    val context = LocalContext.current
-                    ToDoListDialog(
-                        tasks = tasks,
-                        onDismiss = { showToDoListDialog = false },
-                        context = context
-                    )
-                }
-
-                // Display event list dialog when a day is clicked
-                if (showEventListDialog) {
-                    EventListDialog(
-                        selectedDate = selectedDate,
-                        events = events,
-                        onDismiss = { showEventListDialog = false },
-                        onAddEventClick = {
-                            showEventDialog = true
-                            showEventListDialog = false
-                        }
-                    )
-                }
-
-                if (showEventDialog) {
-                    EventDialog(
-                        selectedDate = selectedDate,
-                        onDismiss = { showEventDialog = false },
-                        onEventAdded = { event ->
-                            events = events.toMutableMap().apply {
-                                put(
-                                    selectedDate,
-                                    (events[selectedDate]?.toMutableList() ?: mutableListOf()).apply {
-                                        add(event)
-                                    }
+                            FloatingActionButton(
+                                onClick = { /* Action pour les cours */ },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(
+                                    Icons.Filled.School,
+                                    contentDescription = "Courses",
+                                    tint = Color.Black
                                 )
                             }
                         }
-                    )
+                    }
+
+                    FloatingActionButton(
+                        onClick = { showOptions = !showOptions },
+                        backgroundColor = Color(0xFF5F9EA0)
+                    ) {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = "Options",
+                            tint = Color.White
+                        )
+                    }
                 }
+            }
+
+            // Dialogues pour To Do List et ajout d'événements
+            if (showToDoListDialog) {
+                val context = LocalContext.current
+                ToDoListDialog(
+                    tasks = tasks,
+                    onDismiss = { showToDoListDialog = false },
+                    context = context
+                )
+            }
+
+            // Display event list dialog when a day is clicked
+            if (showEventListDialog) {
+                EventListDialog(
+                    selectedDate = selectedDate,
+                    events = events,
+                    onDismiss = { showEventListDialog = false },
+                    onAddEventClick = {
+                        showEventDialog = true
+                        showEventListDialog = false
+                    }
+                )
+            }
+
+            if (showEventDialog) {
+                EventDialog(
+                    selectedDate = selectedDate,
+                    onDismiss = { showEventDialog = false },
+                    onEventAdded = { event ->
+                        events = events.toMutableMap().apply {
+                            put(
+                                selectedDate,
+                                (events[selectedDate]?.toMutableList() ?: mutableListOf()).apply {
+                                    add(event)
+                                }
+                            )
+                        }
+                    }
+                )
             }
         }
     }
+}
 
 @Composable
 fun W_CalendarGrid(
@@ -430,7 +430,6 @@ fun timeToOffset(time: String, totalHeightPx: Float): Float {
     // Calcul du décalage proportionnel en fonction du totalHeightPx (en pixels)
     return (eventStartTimeInMinutes.toFloat() / totalMinutesInDay.toFloat()) * totalHeightPx
 }
-
 
 
 

@@ -1,3 +1,5 @@
+package org.schoolapp.project
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -9,42 +11,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-data class ReportItem(
-    val trigram: String,
-    val subject: String,
-    val ects: Int,
-    val grade: Int,
-    val total: Int
-)
-
 @Composable
 fun ReportTab() {
-    val recentGrades = listOf(
-        Grade("PHY", "Labo 2 : Optic", 14, 20),
-        Grade("CHE", "Report Oxydo-reduction", 8, 10),
-        Grade("LAW", "Essay Constitution", 10, 30),
-        Grade("THE", "Exercices : Bernouilli", 4, 15)
-    )
-
-    val groupedGrades = recentGrades.groupBy { it.subject }
-    val reportItems = groupedGrades.map { (trigram, grades) ->
-        val averageGrade = grades.map { it.score.toDouble() / it.total * 20 }.average()
-        val subjectName = when (trigram) {
-            "PHY" -> "Physics"
-            "CHE" -> "Chemistry"
-            "LAW" -> "Law"
-            "THE" -> "Thermodynamics"
-            else -> "Unknown"
-        }
-        val ects = when (trigram) {
-            "PHY" -> 5
-            "CHE" -> 3
-            "LAW" -> 7
-            "THE" -> 4
-            else -> 0
-        }
-        ReportItem(trigram, subjectName, ects, averageGrade.toInt(), 20)
-    }
+    val reportItems = getGroupedGrades() // Fetch the data using the function from data
 
     Column(
         modifier = Modifier

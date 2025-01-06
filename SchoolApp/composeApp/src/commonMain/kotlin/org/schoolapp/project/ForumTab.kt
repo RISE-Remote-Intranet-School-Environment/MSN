@@ -1,5 +1,8 @@
 package org.schoolapp.project
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,42 +17,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-
-data class Message(val sender: String, val timestamp: String, val content: String)
 
 @Composable
 fun ForumTab() {
     var newMessage by remember { mutableStateOf("") }
-    val messages = remember {
-        mutableStateListOf(
-            Message("Alice", "2024-11-21 10:00", "Hello everyone!"),
-            Message("Bob", "2024-11-21 10:15", "Can someone help me with calculus?")
-        )
-    }
-
     val groupedMessages = messages.groupBy { it.timestamp.split(" ")[0] }
 
-    // File picker launcher
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            val fileName = uri.lastPathSegment ?: "File"
-            messages.add(
-                Message(
-                    sender = "You",
-                    timestamp = java.text.SimpleDateFormat(
-                        "yyyy-MM-dd HH:mm",
-                        java.util.Locale.getDefault()
-                    ).format(java.util.Date()),
-                    content = "📎 File: $fileName"
-                )
-            )
-        }
+        addFileMessage(uri, messages)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -111,10 +88,7 @@ fun ForumTab() {
             Button(
                 onClick = {
                     if (newMessage.isNotBlank()) {
-                        val timestamp = java.text.SimpleDateFormat(
-                            "yyyy-MM-dd HH:mm",
-                            java.util.Locale.getDefault()
-                        ).format(java.util.Date())
+                        val timestamp = getCurrentTimestamp()
 
                         messages.add(
                             Message(
@@ -150,10 +124,7 @@ fun EmojiPicker(messages: MutableList<Message>) {
         ) {
             emojiList.forEach { emoji ->
                 DropdownMenuItem(onClick = {
-                    val timestamp = java.text.SimpleDateFormat(
-                        "yyyy-MM-dd HH:mm",
-                        java.util.Locale.getDefault()
-                    ).format(java.util.Date())
+                    val timestamp = getCurrentTimestamp()
 
                     messages.add(
                         Message(
