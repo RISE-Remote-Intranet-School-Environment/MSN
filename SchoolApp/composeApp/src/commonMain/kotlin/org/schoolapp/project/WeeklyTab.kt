@@ -16,9 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.TextStyle
-import java.util.Locale
 import java.time.format.DateTimeFormatter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,20 +26,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.School
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.border
-import androidx.compose.material.Card
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.saveable.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import android.content.Context
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
-
 import java.time.DayOfWeek
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 
 
@@ -51,40 +39,9 @@ import androidx.compose.runtime.Composable
 fun WeeklyTab() {
     var currentWeekStart by remember { mutableStateOf(LocalDate.now().with(DayOfWeek.MONDAY)) }
     var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
-    var events by remember { mutableStateOf(mutableMapOf<LocalDate, MutableList<Event>>()) }
+    var events by remember { mutableStateOf(generateEvents()) }
 
-    LaunchedEffect(Unit) {
-        events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
-            .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) }
-            .associate { date ->
-                date to mutableListOf(
-                    Event(
-                        title = "Control Theory",
-                        description = "Au 2F10 avec DBR",
-                        startTime = "08h00",
-                        endTime = "12h00",
-                        color = Color(0xFFFFA500) // Orange
-                    ),
-                    Event(
-                        title = "Software Architecture",
-                        description = "Au 1E04 avec J3L",
-                        startTime = "13h00",
-                        endTime = "16h00",
-                        color = Color(0xFF87CEFA) // Bleu clair
-                    ),
-                    Event(
-                        title = "Network Concepts",
-                        description = "Au 2D52 avec DSM",
-                        startTime = "17h00",
-                        endTime = "19h00",
-                        color = Color(0xFF32CD32) // Vert lime
-                    )
-                )
-            }
-            .toMutableMap()
-    }
-
-    val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
+    val tasks = remember { mutableStateListOf(*generateToDoItems().toTypedArray()) }
     var showEventDialog by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showToDoListDialog by remember { mutableStateOf(false) }
@@ -430,6 +387,7 @@ fun timeToOffset(time: String, totalHeightPx: Float): Float {
     // Calcul du décalage proportionnel en fonction du totalHeightPx (en pixels)
     return (eventStartTimeInMinutes.toFloat() / totalMinutesInDay.toFloat()) * totalHeightPx
 }
+
 
 
 

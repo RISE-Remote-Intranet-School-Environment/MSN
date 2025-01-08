@@ -39,48 +39,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.filled.Delete
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+
+
 
 @Composable
 fun MonthlyTab() {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var currentDay by remember { mutableStateOf(LocalDate.now().dayOfMonth) }
-    var events by remember { mutableStateOf(mutableMapOf<LocalDate, MutableList<Event>>()) }
+    var events by remember { mutableStateOf(generateEvents()) }
 
-
-    // Initialize events with all days from November 2024 to December 31, 2025
-    LaunchedEffect(Unit) {
-        events = generateSequence(LocalDate.of(2024, 11, 1)) { it.plusDays(1) }
-            .takeWhile { it.isBefore(LocalDate.of(2026, 1, 1)) } // End on December 31, 2025
-            .associate { date ->
-                date to mutableListOf(
-                    Event(
-                        title = "Control Theory",
-                        description = "Au 2F10 avec DBR",
-                        startTime = "08h00",
-                        endTime = "12h00",
-                        color = Color(0xFFFFA500) // Orange
-                    ),
-                    Event(
-                        title = "Software Architecture",
-                        description = "Au 1E04 avec J3L",
-                        startTime = "13h00",
-                        endTime = "16h00",
-                        color = Color(0xFF87CEFA) // Bleu clair
-                    ),
-                    Event(
-                        title = "Network Concepts",
-                        description = "Au 2D52 avec DSM",
-                        startTime = "17h00",
-                        endTime = "19h00",
-                        color = Color(0xFF32CD32) // Vert lime
-                    )
-
-                )
-            }
-            .toMutableMap() // Make sure it's mutable
-    }
-
-    val tasks = remember { mutableStateListOf("Complete homework", "Prepare for presentation") }
+    val tasks = remember { mutableStateListOf(*generateToDoItems().toTypedArray()) }
     var showEventDialog by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showToDoListDialog by remember { mutableStateOf(false) }
@@ -90,7 +60,6 @@ fun MonthlyTab() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            // .background(Color(0xFF5F9EA0))
             .background(Color(0xFFFFFFFF))
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
@@ -130,91 +99,91 @@ fun MonthlyTab() {
                     onDayClick = { selectedDate = it; showEventListDialog = true }
                 )
             }
-        // Bouton flottant avec effet pour afficher les options
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            Column(horizontalAlignment = Alignment.End) {
-                AnimatedVisibility(
-                    visible = showOptions,
-                    enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { it / 2 }),
-                    exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(targetOffsetY = { it / 2 })
-                ) {
-                    Column(horizontalAlignment = Alignment.End) {
-                        // Bouton To Do List
-                        FloatingActionButton(
-                            onClick = { showToDoListDialog = true },
-                            backgroundColor = Color(0xFFB0C4DE),
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        ) {
-                            Icon(Icons.Filled.List, contentDescription = "To Do List", tint = Color.Black)
-                        }
+            // Bouton flottant avec effet pour afficher les options
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedVisibility(
+                        visible = showOptions,
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { it / 2 }),
+                        exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(targetOffsetY = { it / 2 })
+                    ) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            // Bouton To Do List
+                            FloatingActionButton(
+                                onClick = { showToDoListDialog = true },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(Icons.Filled.List, contentDescription = "To Do List", tint = Color.Black)
+                            }
 
-                        // Bouton Cours
-                        FloatingActionButton(
-                            onClick = { /* Action pour les cours */ },
-                            backgroundColor = Color(0xFFB0C4DE),
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        ) {
-                            Icon(Icons.Filled.School, contentDescription = "Courses", tint = Color.Black)
-                        }
+                            // Bouton Cours
+                            FloatingActionButton(
+                                onClick = { /* Action pour les cours */ },
+                                backgroundColor = Color(0xFFB0C4DE),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Icon(Icons.Filled.School, contentDescription = "Courses", tint = Color.Black)
+                            }
 
+                        }
                     }
-                }
 
-                // Bouton flottant principal qui déclenche l'animation
-                FloatingActionButton(
-                    onClick = { showOptions = !showOptions },
-                    backgroundColor = Color(0xFF5F9EA0)
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Options", tint = Color.White)
+                    // Bouton flottant principal qui déclenche l'animation
+                    FloatingActionButton(
+                        onClick = { showOptions = !showOptions },
+                        backgroundColor = Color(0xFF5F9EA0)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Options", tint = Color.White)
+                    }
                 }
             }
-        }
 
 
 
 
-        // Dialogues pour To Do List et ajout d'événements
-        if (showToDoListDialog) {
-            val context = LocalContext.current  // Récupérer le contexte actuel
-            ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false }, context = context)
-        }
+            // Dialogues pour To Do List et ajout d'événements
+            if (showToDoListDialog) {
+                val context = LocalContext.current  // Récupérer le contexte actuel
+                ToDoListDialog(tasks = tasks, onDismiss = { showToDoListDialog = false }, context = context)
+            }
 
-        // Display event list dialog when a day is clicked
-        if (showEventListDialog) {
-            EventListDialog(
-                selectedDate = selectedDate,
-                events = events,
-                onDismiss = { showEventListDialog = false },
-                onAddEventClick = {
-                    showEventDialog = true
-                    showEventListDialog = false
-                }
-            )
-        }
-
-        if (showEventDialog) {
-            EventDialog(
-                selectedDate = selectedDate,
-                onDismiss = { showEventDialog = false },
-                onEventAdded = { event ->
-                    events = events.toMutableMap().apply {
-                        put(
-                            selectedDate,
-                            (events[selectedDate]?.toMutableList() ?: mutableListOf()).apply {
-                                add(event)
-                            }
-                        )
+            // Display event list dialog when a day is clicked
+            if (showEventListDialog) {
+                EventListDialog(
+                    selectedDate = selectedDate,
+                    events = events,
+                    onDismiss = { showEventListDialog = false },
+                    onAddEventClick = {
+                        showEventDialog = true
+                        showEventListDialog = false
                     }
-                }
-            )
+                )
+            }
+
+            if (showEventDialog) {
+                EventDialog(
+                    selectedDate = selectedDate,
+                    onDismiss = { showEventDialog = false },
+                    onEventAdded = { event ->
+                        events = events.toMutableMap().apply {
+                            put(
+                                selectedDate,
+                                (events[selectedDate]?.toMutableList() ?: mutableListOf()).apply {
+                                    add(event)
+                                }
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
-}
 }
 
 @Composable
@@ -236,7 +205,7 @@ fun CalendarGrid(
 
     val totalDays = lastDayOfMonth
     val rows = (totalDays + firstDayOfMonth.dayOfWeek.value - 1) / 7 + 1
-   // Calcul de la taille de chaque cellule de jour en fonction de la hauteur disponible
+    // Calcul de la taille de chaque cellule de jour en fonction de la hauteur disponible
     val dayCellHeight = gridHeight / rows
 
     Column {
@@ -282,76 +251,6 @@ fun CalendarGrid(
         }
     }
 }
-
-
-//////// AVEC DELETE /////////////
-// @Composable
-//fun EventListDialog(
-//    selectedDate: LocalDate,
-//    events: MutableMap<LocalDate, MutableList<Event>>,
-//    onDismiss: () -> Unit,
-//    onAddEventClick: () -> Unit
-//) {
-//    val eventsForDay = events[selectedDate] ?: mutableListOf()
-//
-//    AlertDialog(
-//        onDismissRequest = onDismiss,
-//        title = { Text("Events for ${selectedDate.toString()}") },
-//        text = {
-//            Column {
-//                LazyColumn {
-//                    items(eventsForDay) { event ->
-//                        Card(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(vertical = 8.dp)
-//                                .border(2.dp, Color.Gray, shape = RoundedCornerShape(8.dp)),
-//                            elevation = 4.dp
-//                        ) {
-//                            Column(modifier = Modifier.padding(16.dp)) {
-//                                Text(text = " ${event.title}", style = MaterialTheme.typography.h6)
-//                                Text(text = " ${event.description}", style = MaterialTheme.typography.body2)
-//                                Text(text = " Start: ${event.startTime}")
-//                                Text(text = " End: ${event.endTime}")
-//                                Spacer(modifier = Modifier.height(8.dp))
-//                                Row(
-//                                    horizontalArrangement = Arrangement.End,
-//                                    modifier = Modifier.fillMaxWidth()
-//                                ) {
-//                                    IconButton(
-//                                        onClick = {
-//                                            eventsForDay.remove(event) // Supprime l'événement
-//                                            if (eventsForDay.isEmpty()) {
-//                                                events.remove(selectedDate) // Supprime la clé si liste vide
-//                                            }
-//                                        }
-//                                    ) {
-//                                        Icon(
-//                                            imageVector = Icons.Default.Delete,
-//                                            contentDescription = "Delete Event",
-//                                            tint = Color.Red,
-//                                            modifier = Modifier.size(24.dp) // Taille plus petite
-//                                        )
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        },
-//        confirmButton = {
-//            Button(onClick = onAddEventClick) {
-//                Text("Add Event")
-//            }
-//        },
-//        dismissButton = {
-//            TextButton(onClick = onDismiss) {
-//                Text("Close")
-//            }
-//        }
-//    )
-//}
 
 
 @Composable
@@ -538,13 +437,14 @@ fun EventDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val newEvent = Event(eventTitle, eventDescription, eventStartTime, eventEndTime)
+                    val newEvent = Event(eventTitle, eventDescription, eventStartTime, eventEndTime, color = Color.Gray)
                     onEventAdded(newEvent)
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF00796B))
             ) {
-                Text("Add", color = Color.White)
+                Text("Add",color = Color(0xFFFFFFFF),
+                )
             }
         },
         dismissButton = {
@@ -554,21 +454,10 @@ fun EventDialog(
         }
     )
 }
-data class Event(
-    val title: String,
-    val description: String,
-    val startTime: String,
-    val endTime: String,
-    val color: Color = Color.Gray,
-    var isVisible: Boolean = true // Visibility flag
-)
 
-
-
-////////// AVEC DELETE ////////////
 @Composable
 fun ToDoListDialog(
-    tasks: MutableList<String>,
+    tasks: MutableList<ToDoItem>,  // Change le type en MutableList<ToDoItem>
     onDismiss: () -> Unit,
     context: Context
 ) {
@@ -587,7 +476,7 @@ fun ToDoListDialog(
                             modifier = Modifier.fillMaxWidth().padding(8.dp) // Ajuster le padding
                         ) {
                             ToDoItem(
-                                task = task,
+                                task = task.title,  // Utiliser `task.title` pour afficher le titre de la tâche
                                 isChecked = taskStates[index],
                                 onCheckedChange = { isChecked ->
                                     taskStates[index] = isChecked
@@ -627,7 +516,7 @@ fun ToDoListDialog(
                     Button(
                         onClick = {
                             if (newTask.isNotBlank()) {
-                                tasks.add(newTask)
+                                tasks.add(ToDoItem(newTask, false)) // Ajouter un ToDoItem
                                 taskStates.add(false)
                                 newTask = ""
                                 saveTaskStates(context, taskStates)
@@ -646,10 +535,6 @@ fun ToDoListDialog(
         }
     )
 }
-
-
-
-
 
 
 // Fonction pour sauvegarder l'état des tâches dans SharedPreferences
