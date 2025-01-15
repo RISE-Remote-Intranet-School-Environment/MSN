@@ -18,9 +18,7 @@ The architecture follows a modular and maintainable approach.
    - Dependencies are injected via frameworks like Koin or Hilt.
 
 ## ViewModel
-The project appears to follow the MVVM architecture, but we didn't take care of the database part. 
-
-So we haven't any "model".
+The project tries to follow an MVVM architecture.
 
 ## UI with Compose
 The project uses JetBrains Compose, a UI framework inspired by Jetpack Compose.
